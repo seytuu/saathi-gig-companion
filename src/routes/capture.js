@@ -5,6 +5,7 @@ import { validateProfile } from '../validation.js';
 import { createGeminiProvider } from '../ai/gemini.js';
 import { sarvamSTT } from '../ai/stt.js';
 import { orchestrate } from '../agent/orchestrator.js';
+import { config } from '../config.js';
 
 const AUDIO_MIMES = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg'];
 const AUDIO_MAX_BYTES = 1_500_000;
@@ -16,7 +17,8 @@ const AUDIO_MAX_BYTES = 1_500_000;
 export async function capture(req, res) {
   const body = /** @type {Record<string, unknown>} */ (req.body || {});
   const profile = validateProfile(body.profile);
-  const provider = createGeminiProvider();
+  // Agent orchestration is routing-heavy, not drafting — use the fast model.
+  const provider = createGeminiProvider({ model: config.gemini.fastModel });
   const history = Array.isArray(body.history)
     ? body.history.filter((h) => h && typeof h === 'object').slice(-6)
     : [];
