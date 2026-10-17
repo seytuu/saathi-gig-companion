@@ -1,6 +1,12 @@
 // @ts-check
 import { AppError } from '../errors.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
+import { LruCache } from '../utils/cache.js';
+
+// 15 min for weather+AQI, 24h for geocoding (city → coords is stable).
+const conditionsCache = new LruCache({ max: 100, ttlMs: 15 * 60_000 });
+const geocodeCache = new LruCache({ max: 200, ttlMs: 24 * 60 * 60_000 });
 
 /**
  * Server-side proxy for weather + air quality + geocoding.
@@ -29,6 +35,13 @@ export async function conditions(req, res) {
     throw AppError.badRequest('conditions: need lat/lng or city');
   }
 
+  const cacheKey = `${lat.toFixed(3)}|${lng.toFixed(3)}`;
+  const hit = /** @type {any} */ (conditionsCache.get(cacheKey));
+  if (hit) {
+    res.setHeader('Cache-Control', 'public, max-age=900');
+    return res.json({ ...hit, cached: true });
+  }
+
   // Try Google first; fall back to Open-Meteo per-dimension.
   const [weather, air] = await Promise.all([googleWeather(lat, lng, key), googleAir(lat, lng, key)]);
 
@@ -36,12 +49,15 @@ export async function conditions(req, res) {
   if (!w) throw AppError.upstream('conditions unavailable');
 
   const tips = buildTips(w, air);
-  res.json({
+  const payload = {
     source: { weather: weather ? 'google' : 'open-meteo', air: air ? 'google' : 'none' },
     weather: w,
     air,
     tips,
-  });
+  };
+  conditionsCache.set(cacheKey, payload);
+  res.setHeader('Cache-Control', 'public, max-age=900');
+  res.json(payload);
 }
 
 /**
@@ -50,13 +66,18 @@ export async function conditions(req, res) {
  */
 async function geocode(city, key) {
   if (!key) return null;
+  const cityKey = city.trim().toLowerCase();
+  const hit = /** @type {any} */ (geocodeCache.get(cityKey));
+  if (hit) return hit;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city + ', India')}&key=${key}`;
-  const r = await fetch(url);
+  const r = await fetchWithTimeout(url, { timeoutMs: 6_000 });
   if (!r.ok) return null;
   const data = await r.json();
   const loc = data.results?.[0]?.geometry?.location;
   if (!loc) return null;
-  return { lat: loc.lat, lng: loc.lng };
+  const result = { lat: loc.lat, lng: loc.lng };
+  geocodeCache.set(cityKey, result);
+  return result;
 }
 
 /**
@@ -67,8 +88,9 @@ async function geocode(city, key) {
 async function googleWeather(lat, lng, key) {
   if (!key) return null;
   try {
-    const r = await fetch(
-      `https://weather.googleapis.com/v1/currentConditions:lookup?key=${key}&location.latitude=${lat}&location.longitude=${lng}`
+    const r = await fetchWithTimeout(
+      `https://weather.googleapis.com/v1/currentConditions:lookup?key=${key}&location.latitude=${lat}&location.longitude=${lng}`,
+      { timeoutMs: 8_000 }
     );
     if (!r.ok) {
       logger.warn('weather_google_status', { status: r.status });
@@ -96,12 +118,13 @@ async function googleWeather(lat, lng, key) {
 async function googleAir(lat, lng, key) {
   if (!key) return null;
   try {
-    const r = await fetch(
+    const r = await fetchWithTimeout(
       `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${key}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ location: { latitude: lat, longitude: lng } }),
+        timeoutMs: 8_000,
       }
     );
     if (!r.ok) {
