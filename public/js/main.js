@@ -132,7 +132,7 @@ function renderBootError(err) {
  */
 function navigate(mode, opts) {
   current = { mode, opts };
-  if (tabs) tabs.select(mode, false);
+  if (tabs) tabs.select(mode, false, false);
   rerender();
 }
 

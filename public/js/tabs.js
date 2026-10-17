@@ -12,14 +12,19 @@ export function initTabs(tablist, onSelect) {
     Array.from(tablist.querySelectorAll('[role="tab"]'))
   );
 
-  function select(mode, focus = true) {
+  /**
+   * @param {string} mode
+   * @param {boolean} [focus]
+   * @param {boolean} [notify] false = only update the UI (used by navigate() to avoid recursion)
+   */
+  function select(mode, focus = true, notify = true) {
     for (const t of tabs) {
       const match = t.dataset.mode === mode;
       t.setAttribute('aria-selected', match ? 'true' : 'false');
       t.tabIndex = match ? 0 : -1;
       if (match && focus) t.focus();
     }
-    onSelect(mode);
+    if (notify) onSelect(mode);
   }
 
   tablist.addEventListener('click', (e) => {
