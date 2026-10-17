@@ -351,6 +351,36 @@ textarea {
   margin-top: 2px;
 }
 
+/* Key-value grid (ledger entries, totals) */
+.kv {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  margin: var(--space-2) 0;
+}
+.kv-row {
+  display: contents;
+}
+.kv-k {
+  color: var(--color-muted);
+  padding: 6px 0;
+  border-top: 1px solid var(--color-border);
+}
+.kv-v {
+  padding: 6px 0;
+  text-align: right;
+  border-top: 1px solid var(--color-border);
+  font-variant-numeric: tabular-nums;
+}
+.kv-row:first-child .kv-k,
+.kv-row:first-child .kv-v {
+  border-top: 0;
+}
+.kv-strong {
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
 /* Letter block */
 .letter {
   white-space: pre-wrap;

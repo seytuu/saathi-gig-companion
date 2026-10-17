@@ -13,6 +13,7 @@ import { renderGrievance } from './features/grievance.js';
 import { renderHome } from './features/home.js';
 import { renderSchemes } from './features/schemes.js';
 import { renderDocument } from './features/document.js';
+import { renderEarnings } from './features/earnings.js';
 import { renderComingSoon } from './features/comingSoon.js';
 import { errorBox } from './ui/error.js';
 import { render } from './ui/dom.js';
@@ -93,7 +94,7 @@ function rerender() {
     case 'document':
       return renderDocument(panel, { handoff: current.opts?.handoff });
     case 'earnings':
-      return renderComingSoon(panel, lang, t(lang, 'tabs.earnings'));
+      return renderEarnings(panel, navigate);
     case 'safety':
       return renderComingSoon(panel, lang, t(lang, 'tabs.safety'));
     default:
