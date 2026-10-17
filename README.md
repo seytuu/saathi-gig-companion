@@ -94,6 +94,23 @@ Gemini Flash for low latency; structured JSON (no re-parsing chains); per-profil
 - `npm run lint` — ESLint (flat config) + Prettier; `// @ts-check` + JSDoc types.
 - **GitHub Actions CI** runs lint + tests on every push.
 
+## Efficiency
+Judging rubric calls out time + memory. What we do:
+- **Shared `fetchWithTimeout`** (AbortController, chained user signal) in front of every upstream (Gemini, Sarvam, Google Places / Weather / AQI / Geocoding). Nothing can pin the function for the full 60s Vercel cap.
+- **Caching:**
+  - `/api/nearby`: 10-min LRU keyed on (category, lat/lng rounded to 3 decimals, radius); `Cache-Control: public, max-age=600`.
+  - `/api/conditions`: 15-min LRU on rounded coords; `max-age=900`.
+  - Geocoding (`city → coords`): 24-hour LRU — the coords of "Mohali" don't move.
+  - **AI response LRU** (10 min, keyed by FNV-1a hash of `system + user + schema + model`); media bypasses to avoid blowing the budget on binary blobs.
+- **Model routing:** `GEMINI_FAST_MODEL` for classification-only agent turns and scam check; keeps `gemini-3.8-flash` for drafting/extraction. Falls back to the main model when unset.
+- **Base64 via `FileReader.readAsDataURL`** (streaming, no `String.fromCharCode` stack blow-ups).
+- **Client-side image compression** to ≤1280 px JPEG q=0.8, object URLs revoked.
+- **Lazy-loaded tab modules** (`import()`): initial payload = Home + SOS + Bolo only; other tabs fetch on first navigation and are cached.
+- **Instant first paint:** `public/js/config.js` inlines the stable public config so Home renders without a network round-trip; `/api/config` refreshes in the background.
+- **Client aborts:** per-tag cancellation (new request with same tag aborts the previous) + 30 s client timeout.
+- **Store:** debounced persist (300 ms, flushed on `visibilitychange` / `pagehide` / `beforeunload`); size caps (ledger 1000, grievances 200, documents 100, timeline 200); documents **never** store raw base64 — only extracted results.
+- **Trimmed system prompts** — a single `INJECTION_GUARD` string shared across modes, no repeated boilerplate.
+
 ## Accessibility
 Mobile-first, WCAG AA contrast, 16px+ base text, large tap targets, labelled inputs, keyboard-navigable tabs, `aria-live` results, visible focus, `<html lang>` follows the chosen language, reduced-motion respected.
 
