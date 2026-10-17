@@ -11,6 +11,8 @@ import { logger } from './utils/logger.js';
 import { validateAgentRequest } from './validation.js';
 import { getMode, listModes } from './modes/index.js';
 import { createGeminiProvider } from './ai/gemini.js';
+import { nearby } from './routes/nearby.js';
+import { conditions } from './routes/conditions.js';
 
 /**
  * Build the Express app. Pure factory — nothing above the function body
@@ -72,6 +74,22 @@ export function buildApp() {
         maxMediaBytes: config.limits.maxMediaBytes,
       },
     });
+  });
+
+  app.get('/api/nearby', async (req, res, next) => {
+    try {
+      await nearby(req, res);
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  app.get('/api/conditions', async (req, res, next) => {
+    try {
+      await conditions(req, res);
+    } catch (e) {
+      next(e);
+    }
   });
 
   app.post('/api/agent', async (req, res, next) => {

@@ -35,7 +35,7 @@ export const config = Object.freeze({
     ttlMs: 10 * 60_000,
   },
 
-  modes: ['earnings', 'safety', 'schemes', 'document', 'grievance'],
+  modes: ['earnings', 'safety', 'schemes', 'document', 'grievance', 'scam'],
 
   languages: [
     'English',
@@ -69,12 +69,13 @@ export const config = Object.freeze({
 
   // Hard-coded, never AI-generated.
   helplines: [
-    { label: 'Emergency (All India)', number: '112' },
-    { label: 'Ambulance', number: '108' },
-    { label: "Women's helpline", number: '1091' },
-    { label: "Women in distress", number: '181' },
-    { label: 'National Highway helpline', number: '1033' },
-    { label: 'Police', number: '100' },
+    { label: 'Emergency (All India)', number: '112', kind: 'emergency' },
+    { label: 'Ambulance', number: '108', kind: 'medical' },
+    { label: "Women's helpline", number: '1091', kind: 'women' },
+    { label: 'Women in distress', number: '181', kind: 'women' },
+    { label: 'National Highway helpline', number: '1033', kind: 'road' },
+    { label: 'Police', number: '100', kind: 'emergency' },
+    { label: 'Cyber crime (fraud)', number: '1930', kind: 'fraud' },
   ],
 });
 

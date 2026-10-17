@@ -4,12 +4,15 @@ import { t } from '../i18n.js';
 import { el, render } from '../ui/dom.js';
 import { card } from '../ui/card.js';
 import { emptyState } from '../ui/emptyState.js';
+import { renderConditionsCard } from './conditions.js';
+import { helplinesCard } from './safety.js';
 
 /**
  * @param {HTMLElement} panel
  * @param {(mode:string, opts?:any) => void} onNavigate
+ * @param {{helplines?: any[]}} [publicConfig]
  */
-export function renderHome(panel, onNavigate) {
+export function renderHome(panel, onNavigate, publicConfig) {
   const s = store.get();
   const profile = s.profile;
   const lang = profile?.language || 'English';
@@ -21,9 +24,26 @@ export function renderHome(panel, onNavigate) {
     children: [el('p', { class: 'muted' }, t(lang, 'tagline'))],
   });
 
+  // Weekly earnings quick stat
+  const weekly = weeklyNet(s.ledger);
+  const earnCard = card({
+    title: '💰 ' + t(lang, 'tabs.earnings'),
+    children: [
+      s.ledger.length === 0
+        ? emptyState(t(lang, 'earnings.ledgerEmpty'))
+        : el('div', { class: 'kv' }, [
+            kv(t(lang, 'earnings.weekSoFar'), '₹' + weekly.net.toLocaleString('en-IN'), true),
+            kv(t(lang, 'earnings.col.orders'), String(weekly.orders)),
+          ]),
+    ],
+    actions: [
+      actionBtn(t(lang, 'earnings.title'), () => onNavigate('earnings'), 'primary'),
+    ],
+  });
+
   const openGriev = s.grievances.filter((g) => g.status === 'open');
   const grievCard = card({
-    title: t(lang, 'home.openGrievances'),
+    title: '✉️ ' + t(lang, 'home.openGrievances'),
     children: openGriev.length === 0
       ? [emptyState('—')]
       : openGriev.map((g) =>
@@ -38,6 +58,19 @@ export function renderHome(panel, onNavigate) {
         ),
   });
 
+  const quick = card({
+    title: t(lang, 'home.quick'),
+    children: [
+      el('div', { class: 'actions' }, [
+        actionBtn('🛟 ' + t(lang, 'tabs.safety'), () => onNavigate('safety')),
+        actionBtn('📍 ' + t(lang, 'nearby.title'), () => onNavigate('nearby')),
+        actionBtn('🚫 ' + t(lang, 'scam.title'), () => onNavigate('scam')),
+        actionBtn('🪪 ' + t(lang, 'tabs.schemes'), () => onNavigate('schemes')),
+        actionBtn('📄 ' + t(lang, 'tabs.document'), () => onNavigate('document')),
+      ]),
+    ],
+  });
+
   const timeline = card({
     title: t(lang, 'home.recent'),
     children: s.timeline.length === 0
@@ -50,23 +83,39 @@ export function renderHome(panel, onNavigate) {
         ),
   });
 
-  const quick = card({
-    title: 'Quick actions',
-    children: [
-      el('div', { class: 'actions' }, [
-        actionBtn(t(lang, 'tabs.grievance'), () => onNavigate('grievance')),
-        actionBtn(t(lang, 'tabs.schemes'), () => onNavigate('schemes')),
-        actionBtn(t(lang, 'tabs.earnings'), () => onNavigate('earnings')),
-        actionBtn(t(lang, 'tabs.safety'), () => onNavigate('safety')),
-      ]),
-    ],
-  });
-
-  render(panel, greeting, grievCard, quick, timeline);
+  const nodes = [greeting];
+  if (profile) nodes.push(renderConditionsCard(profile));
+  nodes.push(earnCard, grievCard, quick);
+  if (publicConfig?.helplines?.length) {
+    nodes.push(helplinesCard(publicConfig.helplines, lang));
+  }
+  nodes.push(timeline);
+  render(panel, ...nodes);
 }
 
-function actionBtn(label, onClick) {
-  const b = el('button', { type: 'button', class: 'secondary' }, label);
+function kv(k, v, strong) {
+  return el('div', { class: 'kv-row' }, [
+    el('div', { class: 'kv-k' }, k),
+    el('div', { class: 'kv-v' + (strong ? ' kv-strong' : '') }, v),
+  ]);
+}
+
+/** @param {any[]} ledger */
+function weeklyNet(ledger) {
+  const since = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  let net = 0;
+  let orders = 0;
+  for (const e of ledger) {
+    const ts = Date.parse(e.date) || e.createdAt || Date.now();
+    if (ts < since) continue;
+    net += Number(e.net) || 0;
+    orders += Number(e.orders) || 0;
+  }
+  return { net, orders };
+}
+
+function actionBtn(label, onClick, cls = 'secondary') {
+  const b = el('button', { type: 'button', class: cls }, label);
   b.addEventListener('click', onClick);
   return b;
 }

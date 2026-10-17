@@ -4,8 +4,9 @@
  * Versioned localStorage store for the worker record. All features
  * read/write through here; every action can append to the timeline.
  *
- * Shape:
- *   { version, profile?, ledger[], schemes[], documents[], grievances[], timeline[] }
+ * Load is bulletproof: any parse/migration failure backs the raw blob up
+ * to `saathi_backup_<ts>` and starts fresh, so returning users never see
+ * a blank screen when the schema moves forward.
  */
 
 const KEY = 'saathi.v1';
@@ -26,30 +27,76 @@ function fresh() {
   };
 }
 
-/** @param {any} raw @returns {State} */
-function migrate(raw) {
+/**
+ * Migrate an arbitrary raw payload to the current State shape. Enforces
+ * every top-level field so code downstream never sees unexpected types.
+ * @param {any} raw
+ * @returns {State}
+ */
+export function migrate(raw) {
   if (!raw || typeof raw !== 'object') return fresh();
-  if (raw.version === CURRENT_VERSION) return { ...fresh(), ...raw };
-  // Future migrations go here, e.g. v1 → v2.
-  return { ...fresh(), ...raw, version: CURRENT_VERSION };
+  const base = fresh();
+  const next = { ...base };
+  if (typeof raw.profile === 'object' && raw.profile !== null) {
+    next.profile = /** @type {any} */ (raw.profile);
+  }
+  for (const k of ['ledger', 'schemes', 'documents', 'grievances', 'timeline']) {
+    next[k] = Array.isArray(raw[k]) ? raw[k] : base[k];
+  }
+  next.version = CURRENT_VERSION;
+  return next;
 }
 
-/** @type {State} */
-let state;
-try {
-  state = migrate(JSON.parse(localStorage.getItem(KEY) || 'null'));
-} catch {
-  state = fresh();
+/**
+ * Try to load state; on any failure back up the raw blob and reset.
+ * @returns {{state: State, reset: boolean}}
+ */
+function safeLoad() {
+  // When imported from Node (tests), there's no localStorage.
+  if (typeof localStorage === 'undefined') return { state: fresh(), reset: false };
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return { state: fresh(), reset: false };
+    const parsed = JSON.parse(raw);
+    const migrated = migrate(parsed);
+    // Only treat as "reset" if version mismatched or shape fundamentally bad.
+    const needsReset = !parsed || typeof parsed !== 'object' || parsed.version !== CURRENT_VERSION;
+    if (needsReset) {
+      try {
+        localStorage.setItem('saathi_backup_' + Date.now(), raw);
+      } catch {
+        /* storage full or forbidden — give up on backup */
+      }
+    }
+    return { state: migrated, reset: needsReset };
+  } catch (err) {
+    try {
+      const raw = localStorage.getItem(KEY) || '';
+      if (raw) localStorage.setItem('saathi_backup_' + Date.now(), raw);
+    } catch {
+      /* ignore */
+    }
+    console.warn('store: load failed, resetting', err);
+    return { state: fresh(), reset: true };
+  }
 }
+
+const loaded = safeLoad();
+/** @type {State} */
+let state = loaded.state;
+/** True if we had to drop stale data on load — UI shows a toast. */
+export const didResetOnLoad = loaded.reset;
 
 /** @type {Set<(s: State) => void>} */
 const subs = new Set();
 
 function persist() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch (e) {
-    console.warn('store persist failed', e);
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (e) {
+      console.warn('store persist failed', e);
+    }
   }
   subs.forEach((fn) => fn(state));
 }
@@ -110,26 +157,6 @@ export const store = {
     state = { ...state, ledger: state.ledger.filter((e) => e.id !== id) };
     persist();
   },
-  /** @returns {string} serialised state JSON */
-  exportJson() {
-    return JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2);
-  },
-  /**
-   * Restore from a validated JSON payload.
-   * @param {string} json
-   * @returns {boolean}
-   */
-  importJson(json) {
-    try {
-      const raw = JSON.parse(json);
-      if (!raw || typeof raw !== 'object') return false;
-      state = migrate(raw);
-      persist();
-      return true;
-    } catch {
-      return false;
-    }
-  },
   /** @param {any} scheme */
   saveScheme(scheme) {
     state = { ...state, schemes: [...state.schemes, { ...scheme, savedAt: Date.now() }] };
@@ -166,9 +193,30 @@ export const store = {
     };
     persist();
   },
+  /** @returns {string} serialised state JSON */
+  exportJson() {
+    return JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2);
+  },
+  /** @param {string} json @returns {boolean} */
+  importJson(json) {
+    try {
+      const raw = JSON.parse(json);
+      if (!raw || typeof raw !== 'object') return false;
+      state = migrate(raw);
+      persist();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  /** Nuke every saathi key — used by the error-boundary "Reset app". */
   reset() {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && (k === KEY || k.startsWith('saathi'))) localStorage.removeItem(k);
+    }
     state = fresh();
-    persist();
+    subs.forEach((fn) => fn(state));
   },
 };
 

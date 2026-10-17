@@ -514,6 +514,67 @@ dialog::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 
+/* SOS button (persistent, bottom-right) */
+.sos-btn {
+  position: fixed;
+  right: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 30;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-danger-ink);
+  border: 0;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: var(--shadow-elev);
+  cursor: pointer;
+  touch-action: none;
+}
+.sos-btn.arm {
+  animation: sos-pulse 0.5s ease infinite alternate;
+}
+@keyframes sos-pulse {
+  to {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(176, 0, 32, 0.25);
+  }
+}
+[data-mode='simple'] .sos-btn {
+  width: 84px;
+  height: 84px;
+  font-size: 24px;
+}
+
+/* Chips row for category pickers */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+}
+
+/* Verdict pills */
+.notice-danger {
+  background: #fdecef;
+  color: var(--color-danger);
+  border: 1px solid #f3b4bd;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+.notice-ok {
+  background: #e8f6ec;
+  color: var(--color-success);
+  border: 1px solid #bfe4c9;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
 /* Toggle switch (for Simple Mode) */
 .switch {
   display: inline-flex;

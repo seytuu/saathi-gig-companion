@@ -3,6 +3,8 @@ import grievance from './grievance/index.js';
 import schemes from './schemes/index.js';
 import documentMode from './document/index.js';
 import earnings from './earnings/index.js';
+import safety from './safety/index.js';
+import scam from './scam/index.js';
 
 /**
  * Mode registry. Adding a new feature = one folder + one line here.
@@ -10,7 +12,7 @@ import earnings from './earnings/index.js';
  */
 const registry = new Map();
 
-for (const mode of [grievance, schemes, documentMode, earnings]) {
+for (const mode of [grievance, schemes, documentMode, earnings, safety, scam]) {
   registry.set(mode.name, mode);
 }
 
