@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PromptWars App</title>
+  <style>
+    :root { --bg:#f7f7f8; --card:#fff; --text:#1a1a1a; --muted:#666; --accent:#1a73e8; --border:#e3e3e6; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    textarea { width:100%; min-height:120px; padding:12px; border:1px solid var(--border); border-radius:10px; font:inherit; resize:vertical; }
+    button { margin-top:12px; background:var(--accent); color:#fff; border:0; border-radius:10px; padding:12px 20px; font:inherit; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.6; cursor:wait; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
+    .item { padding:10px 0; border-top:1px solid var(--border); }
+    .item:first-of-type { border-top:0; }
+    .label { font-weight:600; }
+    .error { color:#c5221f; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 id="app-title">App name</h1>
+    <p class="sub">One line: who this is for and what it does for them.</p>
+
+    <textarea id="input" placeholder="Describe your situation..."></textarea>
+    <button id="go">Run</button>
+
+    <div id="out"></div>
+  </main>
+
+  <script>
+    const btn = document.getElementById("go");
+    const out = document.getElementById("out");
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+    btn.addEventListener("click", async () => {
+      const input = document.getElementById("input").value;
+      btn.disabled = true; btn.textContent = "Working...";
+      out.innerHTML = "";
+      try {
+        const res = await fetch("/api/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Request failed");
+        out.innerHTML = `
+          <div class="card">
+            <h2>${esc(data.title)}</h2>
+            <p>${esc(data.summary)}</p>
+            ${(data.items || []).map(i => `<div class="item"><div class="label">${esc(i.label)}</div><div>${esc(i.detail)}</div></div>`).join("")}
+          </div>`;
+      } catch (e) {
+        out.innerHTML = `<div class="card error">${esc(e.message)}</div>`;
+      } finally {
+        btn.disabled = false; btn.textContent = "Run";
+      }
+    });
+  </script>
+</body>
+</html>
