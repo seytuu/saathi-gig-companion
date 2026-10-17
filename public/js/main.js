@@ -7,17 +7,49 @@ import { toast } from './ui/toast.js';
 import { el } from './ui/dom.js';
 import { initTabs } from './tabs.js';
 import { openProfileDialog, renderProfileChip } from './features/profile.js';
-import { renderGrievance } from './features/grievance.js';
 import { renderHome } from './features/home.js';
-import { renderSchemes } from './features/schemes.js';
-import { renderDocument } from './features/document.js';
-import { renderEarnings } from './features/earnings.js';
-import { renderSafety } from './features/safety.js';
-import { renderScam } from './features/scam.js';
-import { renderNearby } from './features/nearby.js';
 import { mountSos } from './features/sos.js';
 import { mountBoloFab, openBolo } from './features/bolo.js';
 import { render } from './ui/dom.js';
+import { loading } from './ui/loading.js';
+
+/**
+ * Lazy feature loader. Only Home, Profile, SOS and Bolo are in the
+ * initial bundle; every other tab is fetched on first navigation.
+ * @param {string} mode
+ */
+const featureCache = new Map();
+function loadFeature(mode) {
+  if (featureCache.has(mode)) return featureCache.get(mode);
+  let p;
+  switch (mode) {
+    case 'grievance':
+      p = import('./features/grievance.js').then((m) => m.renderGrievance);
+      break;
+    case 'schemes':
+      p = import('./features/schemes.js').then((m) => m.renderSchemes);
+      break;
+    case 'document':
+      p = import('./features/document.js').then((m) => m.renderDocument);
+      break;
+    case 'earnings':
+      p = import('./features/earnings.js').then((m) => m.renderEarnings);
+      break;
+    case 'safety':
+      p = import('./features/safety.js').then((m) => m.renderSafety);
+      break;
+    case 'scam':
+      p = import('./features/scam.js').then((m) => m.renderScam);
+      break;
+    case 'nearby':
+      p = import('./features/nearby.js').then((m) => m.renderNearby);
+      break;
+    default:
+      p = Promise.resolve(null);
+  }
+  featureCache.set(mode, p);
+  return p;
+}
 
 const panel = /** @type {HTMLElement} */ (document.getElementById('panel'));
 const tablist = /** @type {HTMLElement} */ (document.querySelector('.bottom-nav'));
@@ -126,24 +158,33 @@ function navigate(mode, opts) {
   rerender();
 }
 
-function rerender() {
+async function rerender() {
+  const lang = store.get().profile?.language || 'English';
+  if (current.mode === 'home' || current.mode === 'default') {
+    return renderHome(panel, navigate, publicConfig);
+  }
+  // Show a spinner while the feature chunk arrives.
+  const requestedMode = current.mode;
+  render(panel, loading(lang));
+  const fn = await loadFeature(requestedMode);
+  // Guard against the user navigating away before the chunk resolves.
+  if (!fn || current.mode !== requestedMode) return;
+  const handoff = current.opts?.handoff;
   switch (current.mode) {
-    case 'home':
-      return renderHome(panel, navigate, publicConfig);
     case 'grievance':
-      return renderGrievance(panel, { handoff: current.opts?.handoff });
+      return fn(panel, { handoff });
     case 'schemes':
-      return renderSchemes(panel, navigate, current.opts?.handoff);
+      return fn(panel, navigate, handoff);
     case 'document':
-      return renderDocument(panel, { handoff: current.opts?.handoff });
+      return fn(panel, { handoff });
     case 'earnings':
-      return renderEarnings(panel, navigate, current.opts?.handoff);
+      return fn(panel, navigate, handoff);
     case 'safety':
-      return renderSafety(panel, navigate, publicConfig?.helplines || [], current.opts?.handoff);
+      return fn(panel, navigate, publicConfig?.helplines || [], handoff);
     case 'scam':
-      return renderScam(panel, current.opts?.handoff);
+      return fn(panel, handoff);
     case 'nearby':
-      return renderNearby(panel);
+      return fn(panel);
     default:
       return renderHome(panel, navigate, publicConfig);
   }
