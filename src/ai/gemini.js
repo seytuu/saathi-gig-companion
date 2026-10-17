@@ -11,7 +11,28 @@ import { parseModelJson } from '../utils/parseModelJson.js';
 export function createGeminiProvider() {
   return {
     generateJson,
+    generateWithTools,
   };
+}
+
+/**
+ * Raw function-calling turn. Caller owns the loop (orchestrator).
+ * Returns `{ parts, finishReason }`.
+ *
+ * @param {{system:string, contents:any[], tools?:any[]}} args
+ * @returns {Promise<{parts:any[], finishReason?:string}>}
+ */
+async function generateWithTools({ system, contents, tools }) {
+  if (!config.gemini.apiKey) throw AppError.misconfigured();
+  const body = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents,
+    tools,
+    generationConfig: { temperature: config.gemini.temperature },
+  };
+  const data = await callWithRetry(body);
+  const cand = data?.candidates?.[0];
+  return { parts: cand?.content?.parts || [], finishReason: cand?.finishReason };
 }
 
 /**
