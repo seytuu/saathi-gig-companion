@@ -1,377 +1,26 @@
 // @ts-check
 
 /**
- * Minimal i18n for shell UI (tabs, forms, buttons). AI output is already
- * returned in the worker's language, so we only translate chrome here.
- *
- * English and Hindi are complete. Other Indian languages fall back to
- * English keys for now (future work: fill in).
+ * Lazy i18n loader. Each language pack lives at public/js/i18n/<code>.js
+ * (default export = key→text map) and is fetched via dynamic import() the
+ * first time it is needed. Fallback chain: chosen → Hindi (for Indic
+ * scripts) → English. English is bundled with the first language so there
+ * is never a flash of key names.
  */
-const dict = {
-  English: {
-    'tagline': 'AI working for the worker',
 
-    'tabs.home': 'Home',
-    'tabs.earnings': 'Earnings',
-    'tabs.safety': 'Safety',
-    'tabs.schemes': 'Schemes',
-    'tabs.document': 'Docs',
-    'tabs.grievance': 'Grievance',
-
-    'onboarding.intro': 'Pick your language. Rest is optional.',
-    'onboarding.optional': 'The rest is optional. You can fill it later from the profile chip.',
-    'onboarding.save': 'Save and start',
-    'onboarding.skip': 'Skip for now',
-    'profile.name': 'Name',
-    'profile.workType': 'Work type',
-    'profile.platform': 'Platform or employer',
-    'profile.city': 'City',
-    'profile.state': 'State',
-    'profile.language': 'Language',
-    'profile.edit': 'Edit profile',
-
-    'home.greeting': 'Namaste',
-    'home.recent': 'Recent activity',
-    'home.empty': 'No activity yet. Pick a tab to start.',
-    'home.openGrievances': 'Open grievances',
-    'home.quick': 'Quick actions',
-
-    'grievance.title': 'Write a complaint',
-    'grievance.describe': 'Tell Saathi what went wrong. In your own words.',
-    'grievance.run': 'Draft my complaint',
-    'grievance.subject': 'Subject',
-    'grievance.english': 'English letter',
-    'grievance.local': 'Letter in your language',
-    'grievance.where': 'Where to submit',
-    'grievance.evidence': 'Attach these as evidence',
-    'grievance.copy': 'Copy',
-    'grievance.download': 'Download .txt',
-    'grievance.share': 'Share',
-    'grievance.save': 'Save to my record',
-
-    'schemes.title': 'Welfare schemes for you',
-    'schemes.describe': 'Describe what help you need (optional). Or just press the button for matches.',
-    'schemes.run': 'Find schemes',
-    'schemes.empty': 'No matching schemes right now. Try different words.',
-    'schemes.benefits': 'What you get',
-    'schemes.howTo': 'How to apply',
-    'schemes.docs': 'Documents you will need',
-    'schemes.save': 'Save',
-    'schemes.saved': 'Saved',
-    'schemes.apply': 'Help me apply',
-    'schemes.official': 'Official portal',
-
-    'document.title': 'Explain this paper',
-    'document.describe': 'Upload a photo of the paper or a PDF. Add a question if you want.',
-    'document.pickFile': 'Photo or PDF',
-    'document.question': 'What do you want to know?',
-    'document.run': 'Explain',
-    'document.explain': 'What this means',
-    'document.keyPoints': 'Key points',
-    'document.actions': 'What to do',
-    'document.warnings': 'Warnings',
-    'document.unknown': 'Document',
-    'document.save': 'Save to my record',
-    'document.saved': 'Saved',
-    'document.checklistFor': 'Documents checklist for',
-    'document.checklistHelp': 'Tick off as you collect each one.',
-    'document.pdfTooLarge': 'PDF is too large. Please pick one under 3 MB.',
-
-    'earnings.title': 'Earnings ledger',
-    'earnings.describe': 'Type, speak or paste. Or add a screenshot / SMS / PDF. Saathi will read everything and fill the ledger.',
-    'earnings.textLabel': 'In your words',
-    'earnings.placeholder': 'aaj 14 order kiye, 920 aaye, petrol 180 ka dalwaya',
-    'earnings.pickFile': 'Screenshot or PDF (optional)',
-    'earnings.run': 'Add to ledger',
-    'earnings.needInput': 'Please type something or attach a screenshot.',
-    'earnings.sampleText': 'Try: text',
-    'earnings.sampleSms': 'Try: SMS',
-    'earnings.sampleMissing': 'Try: missing incentive',
-    'earnings.tip': 'Tip',
-    'earnings.empty': 'Nothing found. Try different words or a clearer photo.',
-    'earnings.saved': 'Saved',
-    'earnings.discarded': 'Discarded',
-    'earnings.reviewHelp': 'Saathi suggested these. Check and save the ones that look right.',
-    'earnings.confidence': 'Confidence',
-    'earnings.pleaseCheck': 'Please check the highlighted fields before saving.',
-    'earnings.save': 'Save',
-    'earnings.discard': 'Discard',
-    'earnings.flag.netMismatch': 'Net does not match (gross + incentive − deduction − expense)',
-    'earnings.flag.futureDate': 'Date is in the future',
-    'earnings.flag.grossNotInText': 'Amount not found in what you said',
-    'earnings.flag.ordersRange': 'Orders look too high',
-    'earnings.dispute': 'Dispute this',
-    'earnings.ledgerTitle': 'My ledger',
-    'earnings.ledgerEmpty': 'Empty. Your entries will show here.',
-    'earnings.weekSoFar': 'Last 7 days',
-    'earnings.col.date': 'Date',
-    'earnings.col.platform': 'Platform',
-    'earnings.col.orders': 'Orders',
-    'earnings.col.gross': 'Gross',
-    'earnings.col.incentives': 'Incentive',
-    'earnings.col.deductions': 'Deductions',
-    'earnings.col.expenses': 'Expenses',
-    'earnings.col.net': 'Net',
-
-    'safety.title': 'Get safety help',
-    'safety.pickCategory': 'Pick the closest match, then say what happened.',
-    'safety.describe': 'Say what happened. In your own words.',
-    'safety.run': 'Get help',
-    'safety.doNow': 'Do now',
-    'safety.doNot': 'Do not',
-    'safety.evidence': 'Keep as evidence',
-    'safety.reportTo': 'Report to',
-    'safety.helplines': 'Helplines (always free)',
-    'safety.helplinesHelp': 'Tap to dial.',
-    'safety.complain': 'Complain about this',
-
-    'scam.title': 'Is this a scam?',
-    'scam.describe': 'Paste the message/link, or add a screenshot. Saathi will tell you if it looks like a scam.',
-    'scam.placeholder': 'Dear user, your KYC expired. Click https://…',
-    'scam.pickFile': 'Screenshot (optional)',
-    'scam.run': 'Check it',
-    'scam.needInput': 'Paste a message or add a screenshot.',
-    'scam.verdictScam': '🚫 SCAM — do not click, do not pay.',
-    'scam.verdictSuspicious': '⚠ Looks suspicious. Do not share OTP or UPI PIN.',
-    'scam.verdictSafe': '✅ Looks safe. Still think before you tap.',
-    'scam.reasons': 'Why',
-    'scam.whatToDo': 'What to do',
-    'scam.report': 'Report this',
-    'scam.cyberHelp': 'Cyber crime helpline',
-    'scam.paste': 'Paste',
-
-    'nearby.title': 'Nearby',
-    'nearby.pickOne': 'Pick what you need. Saathi will show the closest.',
-    'nearby.toilet': 'Toilet',
-    'nearby.hospital': 'Hospital',
-    'nearby.police': 'Police',
-    'nearby.pharmacy': 'Pharmacy',
-    'nearby.petrol': 'Petrol',
-    'nearby.ev': 'EV charging',
-    'nearby.atm': 'ATM',
-    'nearby.openMaps': 'Open in Maps',
-    'nearby.openMapsHelp': "We couldn't fetch places. Open Google Maps to search.",
-    'nearby.none': 'No results.',
-    'nearby.noGeo': 'Your browser does not support location.',
-    'nearby.needPerm': 'Please allow location so Saathi can show nearby places.',
-
-    'conditions.title': "Today's conditions",
-    'conditions.loading': 'Checking weather and air…',
-    'conditions.noTips': 'All clear right now.',
-
-    'sos.firing': 'SOS triggered — calling 112…',
-    'sos.emergency': 'Emergency! I am a gig worker. My location:',
-    'sos.askContact': 'Add a trusted contact (10-digit phone, or +91…) so Saathi can send your location in an SOS. Leave blank to skip.',
-
-    'bolo.primary': 'बोलो / Speak to Saathi',
-    'bolo.primaryAria': 'Speak to Saathi',
-    'bolo.primaryHint': 'Tap the mic. Up to 30 seconds. Or type below.',
-    'bolo.title': 'बोलो / Speak',
-    'bolo.sub': 'Say what you need. Saathi will take you to the right place.',
-    'bolo.record': 'Hold to talk',
-    'bolo.stop': 'रोकें / Stop',
-    'bolo.cancel': 'Cancel',
-    'bolo.or': 'या लिखें / or type',
-    'bolo.typePlaceholder': 'Type what you need to say',
-    'bolo.send': 'भेजें / Send',
-    'bolo.youSaid': 'You said',
-    'bolo.continue': 'आगे बढ़ें / Continue',
-    'bolo.retry': 'Try again',
-    'bolo.noMic': 'Mic not available. Please type instead.',
-    'bolo.tooLong': 'Recording too long. Max 30 seconds.',
-    'bolo.notUnderstood': "I couldn't catch that — please try again or type.",
-
-    'generic.error': 'Something went wrong. Please try again.',
-    'generic.loading': 'Working…',
-    'generic.try': 'Try example',
-    'generic.listen': 'Listen',
-    'generic.mic': 'Speak',
-    'generic.comingSoon': 'Coming next',
-    'generic.back': 'Back',
-  },
-  Hindi: {
-    'tagline': 'मजदूर के साथ काम करने वाला AI',
-
-    'tabs.home': 'घर',
-    'tabs.earnings': 'कमाई',
-    'tabs.safety': 'सुरक्षा',
-    'tabs.schemes': 'योजनाएं',
-    'tabs.document': 'कागज़',
-    'tabs.grievance': 'शिकायत',
-
-    'onboarding.intro': 'अपनी भाषा चुनें। बाकी वैकल्पिक।',
-    'onboarding.optional': 'बाकी वैकल्पिक है। बाद में भर सकते हैं।',
-    'onboarding.save': 'शुरू करें',
-    'onboarding.skip': 'अभी छोड़ें',
-    'profile.name': 'नाम',
-    'profile.workType': 'काम का प्रकार',
-    'profile.platform': 'ऐप / नियोक्ता',
-    'profile.city': 'शहर',
-    'profile.state': 'राज्य',
-    'profile.language': 'भाषा',
-    'profile.edit': 'प्रोफ़ाइल बदलें',
-
-    'home.greeting': 'नमस्ते',
-    'home.recent': 'हाल की गतिविधि',
-    'home.empty': 'अभी कुछ नहीं। कोई टैब चुनें।',
-    'home.openGrievances': 'खुली शिकायतें',
-    'home.quick': 'त्वरित मदद',
-
-    'grievance.title': 'शिकायत लिखें',
-    'grievance.describe': 'अपनी बात बताएं। जैसे बोलते हैं वैसे ही लिखें।',
-    'grievance.run': 'मेरी शिकायत तैयार करें',
-    'grievance.subject': 'विषय',
-    'grievance.english': 'अंग्रेज़ी में पत्र',
-    'grievance.local': 'आपकी भाषा में पत्र',
-    'grievance.where': 'कहाँ जमा करें',
-    'grievance.evidence': 'ये सबूत साथ लगाएँ',
-    'grievance.copy': 'कॉपी',
-    'grievance.download': 'डाउनलोड',
-    'grievance.share': 'भेजें',
-    'grievance.save': 'रिकॉर्ड में सहेजें',
-
-    'schemes.title': 'आपके लिए सरकारी योजनाएं',
-    'schemes.describe': 'आपको क्या मदद चाहिए? (वैकल्पिक) या सीधे बटन दबाएँ।',
-    'schemes.run': 'योजनाएं ढूँढें',
-    'schemes.empty': 'अभी कोई मेल खाती योजना नहीं। अलग शब्दों से कोशिश करें।',
-    'schemes.benefits': 'क्या मिलेगा',
-    'schemes.howTo': 'आवेदन कैसे करें',
-    'schemes.docs': 'कौन से कागज़ चाहिए',
-    'schemes.save': 'सहेजें',
-    'schemes.saved': 'सहेज लिया',
-    'schemes.apply': 'आवेदन में मदद चाहिए',
-    'schemes.official': 'आधिकारिक पोर्टल',
-
-    'document.title': 'यह कागज़ समझाओ',
-    'document.describe': 'कागज़ की फोटो या PDF भेजें। चाहें तो सवाल भी लिखें।',
-    'document.pickFile': 'फोटो या PDF',
-    'document.question': 'क्या जानना चाहते हैं?',
-    'document.run': 'समझाओ',
-    'document.explain': 'इसका मतलब',
-    'document.keyPoints': 'ज़रूरी बातें',
-    'document.actions': 'क्या करना है',
-    'document.warnings': 'चेतावनी',
-    'document.unknown': 'कागज़',
-    'document.save': 'सहेजें',
-    'document.saved': 'सहेज लिया',
-    'document.checklistFor': 'कागज़ों की सूची —',
-    'document.checklistHelp': 'जैसे-जैसे मिलते जाएँ, निशान लगाते जाएँ।',
-    'document.pdfTooLarge': 'PDF बहुत बड़ी है। 3 MB से छोटी चुनें।',
-
-    'earnings.title': 'कमाई का हिसाब',
-    'earnings.describe': 'लिखें, बोलें या पेस्ट करें। स्क्रीनशॉट/SMS/PDF भी चलेगा। साथी सब पढ़कर खाता भरेगा।',
-    'earnings.textLabel': 'अपने शब्दों में',
-    'earnings.placeholder': 'aaj 14 order kiye, 920 aaye, petrol 180 ka dalwaya',
-    'earnings.pickFile': 'स्क्रीनशॉट या PDF (वैकल्पिक)',
-    'earnings.run': 'खाते में जोड़ो',
-    'earnings.needInput': 'कुछ लिखें या स्क्रीनशॉट लगाएँ।',
-    'earnings.sampleText': 'उदाहरण: बात',
-    'earnings.sampleSms': 'उदाहरण: SMS',
-    'earnings.sampleMissing': 'उदाहरण: incentive नहीं आया',
-    'earnings.tip': 'सलाह',
-    'earnings.empty': 'कुछ नहीं मिला। दूसरे शब्दों से कोशिश करें।',
-    'earnings.saved': 'सहेज लिया',
-    'earnings.discarded': 'हटा दिया',
-    'earnings.reviewHelp': 'ये Saathi का सुझाव है। सही लगे वो सहेजें।',
-    'earnings.confidence': 'भरोसा',
-    'earnings.pleaseCheck': 'सहेजने से पहले हाइलाइट किए field देख लें।',
-    'earnings.save': 'सहेजें',
-    'earnings.discard': 'हटाएँ',
-    'earnings.flag.netMismatch': 'शुद्ध रकम मेल नहीं खाती',
-    'earnings.flag.futureDate': 'तारीख़ भविष्य की है',
-    'earnings.flag.grossNotInText': 'आपने यह रकम नहीं बोली थी',
-    'earnings.flag.ordersRange': 'ऑर्डर बहुत ज़्यादा',
-    'earnings.dispute': 'इस पर शिकायत',
-    'earnings.ledgerTitle': 'मेरा खाता',
-    'earnings.ledgerEmpty': 'खाली है। यहाँ दिखेगा।',
-    'earnings.weekSoFar': 'पिछले 7 दिन',
-    'earnings.col.date': 'तारीख़',
-    'earnings.col.platform': 'ऐप',
-    'earnings.col.orders': 'ऑर्डर',
-    'earnings.col.gross': 'कुल आया',
-    'earnings.col.incentives': 'इंसेंटिव',
-    'earnings.col.deductions': 'कटौती',
-    'earnings.col.expenses': 'खर्चा',
-    'earnings.col.net': 'शुद्ध',
-
-    'safety.title': 'सुरक्षा मदद',
-    'safety.pickCategory': 'अपनी स्थिति चुनें, फिर बताएँ क्या हुआ।',
-    'safety.describe': 'अपनी बात बताएं।',
-    'safety.run': 'मदद लें',
-    'safety.doNow': 'अभी करें',
-    'safety.doNot': 'यह न करें',
-    'safety.evidence': 'ये सबूत रखें',
-    'safety.reportTo': 'यहाँ शिकायत करें',
-    'safety.helplines': 'हेल्पलाइन (निःशुल्क)',
-    'safety.helplinesHelp': 'टैप करके फ़ोन लगाएँ।',
-    'safety.complain': 'इस पर शिकायत',
-
-    'scam.title': 'क्या यह ठगी है?',
-    'scam.describe': 'मैसेज/लिंक चिपकाएँ या स्क्रीनशॉट लगाएँ।',
-    'scam.placeholder': 'Dear user, आपकी KYC …',
-    'scam.pickFile': 'स्क्रीनशॉट (वैकल्पिक)',
-    'scam.run': 'जाँच करें',
-    'scam.needInput': 'कुछ पेस्ट करें या स्क्रीनशॉट लगाएँ।',
-    'scam.verdictScam': '🚫 ठगी — क्लिक या पेमेंट न करें।',
-    'scam.verdictSuspicious': '⚠ संदिग्ध। OTP/UPI PIN न बताएँ।',
-    'scam.verdictSafe': '✅ सुरक्षित लगता है। फिर भी सोच-समझकर।',
-    'scam.reasons': 'कारण',
-    'scam.whatToDo': 'क्या करें',
-    'scam.report': 'शिकायत करें',
-    'scam.cyberHelp': 'साइबर हेल्पलाइन',
-    'scam.paste': 'पेस्ट',
-
-    'nearby.title': 'पास में क्या है',
-    'nearby.pickOne': 'कौन सी ज़रूरत है?',
-    'nearby.toilet': 'टॉयलेट',
-    'nearby.hospital': 'अस्पताल',
-    'nearby.police': 'पुलिस',
-    'nearby.pharmacy': 'दवाई',
-    'nearby.petrol': 'पेट्रोल',
-    'nearby.ev': 'EV चार्जिंग',
-    'nearby.atm': 'ATM',
-    'nearby.openMaps': 'मैप में खोलें',
-    'nearby.openMapsHelp': 'जगहें नहीं मिलीं। Google Maps खोलें।',
-    'nearby.none': 'कुछ नहीं मिला।',
-    'nearby.noGeo': 'ब्राउज़र location नहीं देता।',
-    'nearby.needPerm': 'कृपया location की अनुमति दें।',
-
-    'conditions.title': 'आज का हाल',
-    'conditions.loading': 'मौसम और हवा देख रहा हूँ…',
-    'conditions.noTips': 'सब ठीक है अभी।',
-
-    'sos.firing': 'SOS — 112 पर फ़ोन…',
-    'sos.emergency': 'इमरजेंसी! मैं gig worker हूँ। मेरी location:',
-    'sos.askContact': 'एक भरोसेमंद नंबर जोड़ें (10 अंक या +91…)। SOS में Saathi यह location भेजेगा।',
-
-    'bolo.primary': 'बोलो',
-    'bolo.primaryAria': 'साथी से बात करें',
-    'bolo.primaryHint': 'माइक दबाएँ। 30 सेकंड तक। या नीचे लिखें।',
-    'bolo.title': 'बोलो',
-    'bolo.sub': 'जो चाहिए बोलें। साथी सही जगह ले जाएगा।',
-    'bolo.record': 'रिकॉर्ड',
-    'bolo.stop': 'रोकें',
-    'bolo.cancel': 'रद्द करें',
-    'bolo.or': 'या लिखें',
-    'bolo.typePlaceholder': 'जो कहना है लिखें',
-    'bolo.send': 'भेजें',
-    'bolo.youSaid': 'आपने कहा',
-    'bolo.continue': 'आगे बढ़ें',
-    'bolo.retry': 'दोबारा कोशिश',
-    'bolo.noMic': 'माइक नहीं है। कृपया लिखें।',
-    'bolo.tooLong': 'बहुत लंबा। 30 सेकंड अधिकतम।',
-    'bolo.notUnderstood': 'समझ नहीं पाया — फिर से कोशिश करें।',
-
-    'generic.error': 'कुछ गड़बड़ हुई। फिर से कोशिश करें।',
-    'generic.loading': 'कर रहा हूँ…',
-    'generic.try': 'उदाहरण आज़माएँ',
-    'generic.listen': 'सुनें',
-    'generic.mic': 'बोलें',
-    'generic.comingSoon': 'जल्द आ रहा है',
-    'generic.back': 'वापस',
-  },
+/** Short code per Saathi language. Keep in sync with public/js/i18n/*.js. */
+const codeMap = {
+  English: 'en',
+  Hindi: 'hi',
+  Hinglish: 'hinglish',
+  Punjabi: 'pa',
+  Tamil: 'ta',
+  Telugu: 'te',
+  Bengali: 'bn',
+  Marathi: 'mr',
 };
 
+/** HTML `lang` attribute and SpeechRecognition BCP-47. */
 const htmlLangMap = {
   English: 'en',
   Hindi: 'hi',
@@ -383,25 +32,72 @@ const htmlLangMap = {
   Marathi: 'mr',
 };
 
+/** @type {Map<string, Record<string,string>>} */
+const packs = new Map();
+
+/** Which Indic-script langs fall back to Hindi before English. */
+const INDIC_SCRIPT = new Set(['Hindi', 'Punjabi', 'Tamil', 'Telugu', 'Bengali', 'Marathi']);
+
 /** @param {string} lang */
 export function htmlLang(lang) {
   return htmlLangMap[lang] || 'en';
 }
 
-/** @param {string} lang */
-function pack(lang) {
-  return dict[lang] || dict.English;
+/**
+ * Load a language pack (and English + Hindi as fallbacks). Idempotent.
+ * @param {string} lang
+ */
+export async function loadLang(lang) {
+  await Promise.all(
+    [lang, INDIC_SCRIPT.has(lang) ? 'Hindi' : null, 'English']
+      .filter(Boolean)
+      .map((l) => loadOne(/** @type {string} */ (l)))
+  );
 }
 
-/** @param {string} lang @param {string} key */
+async function loadOne(lang) {
+  if (packs.has(lang)) return;
+  const code = codeMap[lang];
+  if (!code) {
+    packs.set(lang, {});
+    return;
+  }
+  try {
+    const mod = await import(`./i18n/${code}.js`);
+    packs.set(lang, mod.default || {});
+  } catch (err) {
+    console.warn(`i18n: pack ${code} missing`, err);
+    packs.set(lang, {});
+  }
+}
+
+/**
+ * Resolve a key with the fallback chain. If packs aren't loaded yet,
+ * returns the key itself (caller should await loadLang before first paint).
+ * @param {string} lang
+ * @param {string} key
+ */
 export function t(lang, key) {
-  const p = pack(lang);
-  if (p[key]) return p[key];
-  return dict.English[key] || key;
+  const chosen = packs.get(lang);
+  if (chosen && chosen[key]) return chosen[key];
+  if (INDIC_SCRIPT.has(lang)) {
+    const hi = packs.get('Hindi');
+    if (hi && hi[key]) return hi[key];
+  }
+  const en = packs.get('English');
+  if (en && en[key]) return en[key];
+  return key;
 }
 
-/** Replace `data-i18n` placeholders inside the given root. */
+/**
+ * Replace `data-i18n` text and `data-i18n-aria-label` attributes within the
+ * given root using the chosen language.
+ * @param {ParentNode} root
+ * @param {string} lang
+ */
 export function applyI18n(root, lang) {
+  // Ensure the pack is in memory before writing. If called synchronously
+  // with an unloaded pack, callers will have already awaited loadLang.
   root.querySelectorAll('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     if (key) el.textContent = t(lang, key);

@@ -2,7 +2,7 @@
 import { getPublicConfig } from './api.js';
 import { inlineConfig } from './config.js';
 import { store, didResetOnLoad } from './store.js';
-import { applyI18n } from './i18n.js';
+import { applyI18n, loadLang } from './i18n.js';
 import { toast } from './ui/toast.js';
 import { el } from './ui/dom.js';
 import { initTabs } from './tabs.js';
@@ -84,6 +84,7 @@ async function bootInner() {
   }
 
   const lang = store.get().profile?.language || 'English';
+  await loadLang(lang);
   applyI18n(document, lang);
   renderProfileChip();
 
@@ -92,6 +93,7 @@ async function bootInner() {
   profileBtn.addEventListener('click', async () => {
     await openProfileDialog(publicConfig);
     const l = store.get().profile?.language || 'English';
+    await loadLang(l);
     applyI18n(document, l);
     renderProfileChip();
     rerender();
@@ -100,6 +102,7 @@ async function bootInner() {
   if (!store.get().profile) {
     await openProfileDialog(publicConfig);
     const l = store.get().profile?.language || 'English';
+    await loadLang(l);
     applyI18n(document, l);
     renderProfileChip();
   }
