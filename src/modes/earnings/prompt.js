@@ -23,7 +23,7 @@ export function buildEarningsPrompt(ctx) {
     `- Attached media parts: ${media.length}`,
     '',
     'Each entry must have:',
-    '- date (YYYY-MM-DD if known; else "today" / "yesterday" / short description)',
+    '- date (YYYY-MM-DD if known; "today", "yesterday", "aaj", "kal", "parso" are also accepted — the server converts these to ISO automatically)',
     `- platform (default to "${profile.platform}" if not stated)`,
     '- orders (integer; 0 if unknown)',
     '- gross, incentives, deductions, expenses, net (numbers in INR; 0 if unknown)',

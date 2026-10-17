@@ -2,6 +2,7 @@
 import { AppError } from '../../errors.js';
 import { buildEarningsPrompt } from './prompt.js';
 import { earningsSchema, isEarningsOutput } from './schema.js';
+import { normalizeDate } from '../../utils/dates.js';
 
 /**
  * @param {import('../../types.js').ModeContext} ctx
@@ -21,5 +22,9 @@ export async function runEarnings(ctx, provider) {
     schema: earningsSchema,
   });
   if (!isEarningsOutput(out)) throw AppError.upstream('bad earnings shape');
-  return out;
+  // Normalize relative/free-form dates to ISO YYYY-MM-DD (Asia/Kolkata).
+  const now = new Date();
+  const typed = /** @type {{entries:any[], tip:string}} */ (out);
+  typed.entries = typed.entries.map((e) => ({ ...e, date: normalizeDate(String(e.date || ''), now) }));
+  return typed;
 }
