@@ -6,7 +6,6 @@ import { INJECTION_GUARD } from '../../prompts/guards.js';
  */
 export function buildEarningsPrompt(ctx) {
   const { profile, media } = ctx;
-  const simple = profile.simpleMode;
 
   return [
     'You are Saathi, a GenAI companion for Indian gig and informal workers.',
@@ -32,9 +31,7 @@ export function buildEarningsPrompt(ctx) {
     '',
     'Rules:',
     `- "tip" is a single short money/safety tip in ${profile.language}, in simple words.`,
-    simple
-      ? '- SIMPLE MODE: at most 2 entries, "notes" at most 1 short line, "tip" one sentence.'
-      : '- Normal mode: group obvious duplicates across frames/screenshots into one entry.',
+    '- Group obvious duplicates across frames/screenshots into one entry.',
     '- Never invent amounts. If something is unclear, set it to 0 and mention "unclear" in notes.',
     '- Do NOT ask for Aadhaar or bank account numbers.',
     '',

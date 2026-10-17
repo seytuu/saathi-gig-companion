@@ -23,18 +23,6 @@ test('schemes prompt includes language, profile, injection guard and real scheme
   assert.ok(/PMSBY/i.test(prompt));
 });
 
-test('schemes prompt switches wording in Simple Mode', () => {
-  const normal = schemes.buildPrompt({ input: '', profile, media: [], context: {} });
-  const simple = schemes.buildPrompt({
-    input: '',
-    profile: { ...profile, simpleMode: true },
-    media: [],
-    context: {},
-  });
-  assert.ok(/SIMPLE MODE IS ON/.test(simple));
-  assert.ok(!/SIMPLE MODE IS ON/.test(normal));
-});
-
 test('schemes handler rejects bad shape', async () => {
   const badProvider = { generateJson: async () => ({ schemes: 'wat' }) };
   await assert.rejects(() =>

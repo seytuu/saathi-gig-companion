@@ -6,7 +6,6 @@ import { INJECTION_GUARD } from '../../prompts/guards.js';
  */
 export function buildScamPrompt(ctx) {
   const { profile } = ctx;
-  const simple = profile.simpleMode;
 
   return [
     'You are Saathi, a GenAI companion for Indian gig and informal workers.',
@@ -32,9 +31,7 @@ export function buildScamPrompt(ctx) {
     '  - If scam/suspicious: "Do not click the link / do not share OTP / do not pay."',
     '  - Always include: "Report to cybercrime.gov.in" and "Dial 1930 (National Cyber Crime helpline)".',
     '  - If a bank/UPI debit happened in last 24h, add: "Call your bank and freeze the card immediately."',
-    simple
-      ? '- SIMPLE MODE: max 3 reasons, max 3 steps.'
-      : '- Normal mode: concise, no fluff.',
+    '- Concise, no fluff.',
     '',
     'Respond ONLY with JSON matching the provided schema.',
   ].join('\n');

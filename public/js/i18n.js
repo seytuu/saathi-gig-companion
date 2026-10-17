@@ -28,8 +28,6 @@ const dict = {
     'profile.city': 'City',
     'profile.state': 'State',
     'profile.language': 'Language',
-    'profile.simpleMode': 'Simple mode',
-    'profile.simpleMode.help': 'Big text, simple words, voice first',
     'profile.edit': 'Edit profile',
 
     'home.greeting': 'Namaste',
@@ -193,8 +191,6 @@ const dict = {
     'profile.city': 'शहर',
     'profile.state': 'राज्य',
     'profile.language': 'भाषा',
-    'profile.simpleMode': 'आसान मोड',
-    'profile.simpleMode.help': 'बड़े अक्षर, आसान शब्द, आवाज़ पहले',
     'profile.edit': 'प्रोफ़ाइल बदलें',
 
     'home.greeting': 'नमस्ते',

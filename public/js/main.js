@@ -5,12 +5,7 @@ import { applyI18n } from './i18n.js';
 import { toast } from './ui/toast.js';
 import { el } from './ui/dom.js';
 import { initTabs } from './tabs.js';
-import {
-  openProfileDialog,
-  renderProfileChip,
-  toggleSimpleMode,
-  applySimpleModeAttr,
-} from './features/profile.js';
+import { openProfileDialog, renderProfileChip } from './features/profile.js';
 import { renderGrievance } from './features/grievance.js';
 import { renderHome } from './features/home.js';
 import { renderSchemes } from './features/schemes.js';
@@ -26,8 +21,6 @@ import { render } from './ui/dom.js';
 const panel = /** @type {HTMLElement} */ (document.getElementById('panel'));
 const tablist = /** @type {HTMLElement} */ (document.querySelector('.bottom-nav'));
 const profileBtn = /** @type {HTMLButtonElement} */ (document.getElementById('profile-chip'));
-const simpleBtn = /** @type {HTMLButtonElement} */ (document.getElementById('simple-chip'));
-
 /** @type {{ mode: string, opts?: any }} */
 let current = { mode: 'home' };
 /** @type {any} */
@@ -56,7 +49,6 @@ async function bootInner() {
 
   const lang = store.get().profile?.language || 'English';
   applyI18n(document, lang);
-  applySimpleModeAttr();
   renderProfileChip();
 
   tabs = initTabs(tablist, (mode) => navigate(mode));
@@ -65,14 +57,6 @@ async function bootInner() {
     await openProfileDialog(publicConfig);
     const l = store.get().profile?.language || 'English';
     applyI18n(document, l);
-    applySimpleModeAttr();
-    renderProfileChip();
-    rerender();
-  });
-
-  simpleBtn.addEventListener('click', () => {
-    toggleSimpleMode();
-    applySimpleModeAttr();
     renderProfileChip();
     rerender();
   });
@@ -81,7 +65,6 @@ async function bootInner() {
     await openProfileDialog(publicConfig);
     const l = store.get().profile?.language || 'English';
     applyI18n(document, l);
-    applySimpleModeAttr();
     renderProfileChip();
   }
 

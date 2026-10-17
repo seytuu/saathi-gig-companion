@@ -6,7 +6,6 @@ import { INJECTION_GUARD } from '../../prompts/guards.js';
  */
 export function buildSchemesPrompt(ctx) {
   const { profile, input } = ctx;
-  const simple = profile.simpleMode;
 
   return [
     'You are Saathi, a GenAI companion for Indian gig and informal workers.',
@@ -34,9 +33,7 @@ export function buildSchemesPrompt(ctx) {
     '',
     'Rules:',
     `- Write all fields in ${profile.language}. Simple sentences, short words.`,
-    simple
-      ? '- SIMPLE MODE IS ON. Return at most 3 schemes. Each field at most 2 short sentences. No jargon.'
-      : '- Return 3 to 6 schemes.',
+    '- Return 3 to 6 schemes.',
     '- "official_link" MUST be the real portal URL (eshram.gov.in, pmjay.gov.in, etc.). Do not invent URLs.',
     '- "how_to_apply_steps" are concrete, numbered-feel instructions (e.g. "Go to eshram.gov.in", "Click Register on e-Shram").',
     '- Each scheme description should end with: "Verify details on the official portal before applying." (translated).',

@@ -25,12 +25,3 @@ test('every registered mode embeds the shared injection guard', () => {
   }
 });
 
-test('every mode supports simpleMode by producing a different prompt', () => {
-  for (const name of listModes()) {
-    const mode = getMode(name);
-    assert.ok(mode);
-    const a = mode.buildPrompt({ input: 'test', profile, media: [], context: {} });
-    const b = mode.buildPrompt({ input: 'test', profile: { ...profile, simpleMode: true }, media: [], context: {} });
-    assert.notEqual(a, b, `${name} prompt should change in simpleMode`);
-  }
-});

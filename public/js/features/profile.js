@@ -21,12 +21,10 @@ export function openProfileDialog(config) {
     form.name.value = current.name;
     form.city.value = current.city;
     form.state.value = current.state;
-    form.simpleMode.checked = !!current.simpleMode;
   } else {
     form.name.value = '';
     form.city.value = '';
     form.state.value = '';
-    form.simpleMode.checked = false;
   }
 
   applyI18n(dialog, current?.language || 'English');
@@ -51,7 +49,6 @@ export function openProfileDialog(config) {
         city: String(data.get('city') || '-').trim() || '-',
         state: String(data.get('state') || '-').trim() || '-',
         language: String(data.get('language') || 'English') || 'English',
-        simpleMode: data.get('simpleMode') === 'on' || form.simpleMode.checked,
       };
     };
     const onSubmit = (e) => {
@@ -67,31 +64,14 @@ export function openProfileDialog(config) {
 
 export function renderProfileChip() {
   const chip = /** @type {HTMLButtonElement} */ (document.getElementById('profile-chip'));
-  const simpleChip = /** @type {HTMLButtonElement} */ (document.getElementById('simple-chip'));
   const p = store.get().profile;
   if (!p) {
     chip.hidden = true;
-    simpleChip.hidden = true;
     return;
   }
   chip.hidden = false;
-  simpleChip.hidden = false;
   chip.setAttribute('aria-label', t(p.language, 'profile.edit'));
   chip.textContent = `${p.name} • ${labelFor(p.workType)} • ${p.language}`;
-  simpleChip.setAttribute('aria-pressed', p.simpleMode ? 'true' : 'false');
-  simpleChip.setAttribute('aria-label', t(p.language, 'profile.simpleMode'));
-}
-
-export function toggleSimpleMode() {
-  const p = store.get().profile;
-  if (!p) return;
-  store.setProfile({ ...p, simpleMode: !p.simpleMode });
-}
-
-export function applySimpleModeAttr() {
-  const p = store.get().profile;
-  if (p?.simpleMode) document.documentElement.setAttribute('data-mode', 'simple');
-  else document.documentElement.removeAttribute('data-mode');
 }
 
 function labelFor(workType) {

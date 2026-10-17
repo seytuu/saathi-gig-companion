@@ -35,5 +35,5 @@ export async function runSchemes(ctx, provider) {
 function cacheKey(ctx) {
   if (ctx.input || ctx.media.length) return null;
   const p = ctx.profile;
-  return `${p.workType}|${p.state}|${p.language}|${p.simpleMode ? 'S' : 'N'}`;
+  return `${p.workType}|${p.state}|${p.language}`;
 }

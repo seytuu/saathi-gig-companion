@@ -33,7 +33,6 @@ Every feature hands off to the next, through one shared on-device "worker record
 
 ## Built for the real user
 - **Zero-setup onboarding:** no login, no OTP, no forms — only the language is required; everything else is skippable. Permissions (mic, location) are asked just-in-time.
-- **Simple Mode** (inspired by Uber's simplified experience for seniors): bigger text (≥22px) and tap targets (56px), higher contrast, shorter AI answers, fewer choices — for older and low-literacy workers.
 - **Multilingual:** English, Hindi, Hinglish, Punjabi, Tamil, Telugu, Bengali, Marathi; Noto Sans Devanagari/Gurmukhi fonts. Voice input (browser speech recognition) alongside text — never voice-only.
 - **Data stays on the phone:** worker record in versioned localStorage with migrations and a crash-safe fallback (bad/old data is backed up and reset, never a blank screen).
 
@@ -96,7 +95,7 @@ Gemini Flash for low latency; structured JSON (no re-parsing chains); per-profil
 - **GitHub Actions CI** runs lint + tests on every push.
 
 ## Accessibility
-Mobile-first, WCAG AA contrast, 16px+ base text (22px in Simple Mode), large tap targets, labelled inputs, keyboard-navigable tabs, `aria-live` results, visible focus, `<html lang>` follows the chosen language, reduced-motion respected.
+Mobile-first, WCAG AA contrast, 16px+ base text, large tap targets, labelled inputs, keyboard-navigable tabs, `aria-live` results, visible focus, `<html lang>` follows the chosen language, reduced-motion respected.
 
 ## Run locally
 ```bash
@@ -110,6 +109,7 @@ npm test && npm run lint
 Import the GitHub repo → Framework preset "Other" → add env vars `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.8-flash`, `GOOGLE_MAPS_API_KEY` → Deploy. Every push to `main` redeploys.
 
 ## Roadmap (designed, not yet built)
+- **Assisted mode** for older / low-literacy workers (voice-first, read-aloud, one task per screen) — redesigned, not just larger UI.
 - **Quick Capture:** one hold-to-record button; voice note → Indic speech-to-text (**Sarvam Saaras**, code-mix aware, Gemini audio fallback) → Gemini routes to the right feature.
 - **Incident recorder ("dashcam"):** "Police ne roka" starts audio recording with timestamp, GPS and a SHA-256 integrity hash → AI summary → contest challan / complaint.
 - **Challan Saathi:** papers checklist with PUC/insurance expiry reminders; calm script; e-challan check and contest flow.

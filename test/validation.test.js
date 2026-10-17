@@ -14,18 +14,12 @@ const goodProfile = {
 };
 
 test('validateProfile accepts a valid profile', () => {
-  assert.deepEqual(validateProfile(goodProfile), { ...goodProfile, simpleMode: false });
+  assert.deepEqual(validateProfile(goodProfile), goodProfile);
 });
 
-test('validateProfile preserves simpleMode=true', () => {
+test('validateProfile silently drops a stale simpleMode field from old clients', () => {
   const r = validateProfile({ ...goodProfile, simpleMode: true });
-  assert.equal(r.simpleMode, true);
-});
-
-test('validateProfile ignores truthy non-boolean simpleMode', () => {
-  // Only strict true enables simple mode — avoids accidental activation.
-  const r = validateProfile({ ...goodProfile, simpleMode: 'yes' });
-  assert.equal(r.simpleMode, false);
+  assert.equal(/** @type {any} */ (r).simpleMode, undefined);
 });
 
 test('validateProfile rejects unknown language', () => {

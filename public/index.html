@@ -21,18 +21,6 @@
         <span class="tagline" data-i18n="tagline">AI working for the worker</span>
       </div>
       <div class="header-actions">
-        <button
-          id="simple-chip"
-          class="chip"
-          type="button"
-          aria-pressed="false"
-          data-i18n-aria-label="profile.simpleMode"
-          aria-label="Simple mode"
-          hidden
-        >
-          <span aria-hidden="true">👁️</span>
-          <span data-i18n="profile.simpleMode">Simple</span>
-        </button>
         <button id="profile-chip" class="chip" type="button" aria-label="Edit profile" hidden></button>
       </div>
     </header>
@@ -103,12 +91,6 @@
             <input name="state" maxlength="80" />
           </label>
         </div>
-
-        <label class="switch">
-          <input type="checkbox" name="simpleMode" />
-          <span class="track" aria-hidden="true"></span>
-          <span data-i18n="profile.simpleMode">Simple mode (big text, voice-first)</span>
-        </label>
 
         <div class="actions">
           <button type="submit" class="primary" data-i18n="onboarding.save">Save and start</button>

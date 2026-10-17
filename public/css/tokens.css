@@ -54,23 +54,6 @@
   --shadow-elev: 0 6px 20px rgba(16, 24, 40, 0.1);
 }
 
-/* Simple Mode: larger everything, higher-contrast surfaces. */
-[data-mode='simple'] {
-  --tap-min: 56px;
-  --text-xs: 16px;
-  --text-sm: 18px;
-  --text-base: 22px;
-  --text-lg: 26px;
-  --text-xl: 30px;
-  --text-2xl: 36px;
-  --text-3xl: 44px;
-  --radius: 16px;
-  --radius-lg: 20px;
-  --color-text: #000000;
-  --color-muted: #333333;
-  --color-border: #c4ccd4;
-}
-
 /* Respect user motion preference. */
 @media (prefers-reduced-motion: reduce) {
   * {

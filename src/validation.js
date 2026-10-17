@@ -61,8 +61,8 @@ export function validateProfile(raw) {
   const language = check('language', p.language);
   if (!config.languages.includes(language)) throw AppError.badRequest('profile.language');
 
-  const simpleMode = p.simpleMode === true;
-
+  // simpleMode has been removed from the UI. We silently ignore any leftover
+  // field that may still be in old client caches instead of rejecting it.
   return {
     name,
     workType: /** @type {import('./types.js').WorkerProfile['workType']} */ (workTypeRaw),
@@ -70,7 +70,6 @@ export function validateProfile(raw) {
     city,
     state,
     language,
-    simpleMode,
   };
 }
 

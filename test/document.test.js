@@ -19,18 +19,6 @@ test('document prompt embeds the injection guard and language', () => {
   assert.ok(prompt.includes(profile.language));
 });
 
-test('document prompt differs in Simple Mode', () => {
-  const normal = documentMode.buildPrompt({ input: '?', profile, media: [], context: {} });
-  const simple = documentMode.buildPrompt({
-    input: '?',
-    profile: { ...profile, simpleMode: true },
-    media: [],
-    context: {},
-  });
-  assert.notEqual(normal, simple);
-  assert.ok(/SIMPLE MODE IS ON/.test(simple));
-});
-
 test('document handler validates output shape', async () => {
   const good = {
     document_type: 'Platform notice',
