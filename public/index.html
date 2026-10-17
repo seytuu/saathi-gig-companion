@@ -3,27 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0b7a3b" />
+    <meta name="theme-color" content="#0b6b6e" />
     <title>Saathi — Gig Worker Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Gurmukhi:wght@400;500;700&display=swap"
+    />
     <link rel="stylesheet" href="/css/style.css" />
   </head>
-  <body>
+  <body class="app-shell">
     <header class="app-header">
       <div class="brand">
-        <span class="logo" aria-hidden="true">👷</span>
+        <span aria-hidden="true">👷</span>
         <strong>Saathi</strong>
         <span class="tagline" data-i18n="tagline">AI working for the worker</span>
       </div>
-      <button
-        id="profile-chip"
-        class="profile-chip"
-        type="button"
-        aria-label="Edit profile"
-        hidden
-      ></button>
+      <div class="header-actions">
+        <button
+          id="simple-chip"
+          class="chip"
+          type="button"
+          aria-pressed="false"
+          data-i18n-aria-label="profile.simpleMode"
+          aria-label="Simple mode"
+          hidden
+        >
+          <span aria-hidden="true">👁️</span>
+          <span data-i18n="profile.simpleMode">Simple</span>
+        </button>
+        <button id="profile-chip" class="chip" type="button" aria-label="Edit profile" hidden></button>
+      </div>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="Saathi features">
+    <main id="panel" role="tabpanel" aria-live="polite" aria-busy="false"></main>
+
+    <nav class="bottom-nav" role="tablist" aria-label="Saathi features">
       <button role="tab" class="tab" data-mode="home" aria-selected="true" id="tab-home">
         <span class="tab-icon" aria-hidden="true">🏠</span>
         <span class="tab-label" data-i18n="tabs.home">Home</span>
@@ -49,8 +65,6 @@
         <span class="tab-label" data-i18n="tabs.grievance">Grievance</span>
       </button>
     </nav>
-
-    <main id="panel" role="tabpanel" aria-live="polite" aria-busy="false"></main>
 
     <dialog id="onboarding" aria-labelledby="onboarding-title">
       <form method="dialog" id="onboarding-form">
@@ -86,6 +100,12 @@
         <label>
           <span data-i18n="profile.language">Language</span>
           <select name="language" required></select>
+        </label>
+
+        <label class="switch">
+          <input type="checkbox" name="simpleMode" />
+          <span class="track" aria-hidden="true"></span>
+          <span data-i18n="profile.simpleMode">Simple mode (big text, voice-first)</span>
         </label>
 
         <div class="actions">

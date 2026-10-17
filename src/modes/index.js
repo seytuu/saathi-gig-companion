@@ -1,5 +1,7 @@
 // @ts-check
 import grievance from './grievance/index.js';
+import schemes from './schemes/index.js';
+import documentMode from './document/index.js';
 
 /**
  * Mode registry. Adding a new feature = one folder + one line here.
@@ -7,7 +9,7 @@ import grievance from './grievance/index.js';
  */
 const registry = new Map();
 
-for (const mode of [grievance]) {
+for (const mode of [grievance, schemes, documentMode]) {
   registry.set(mode.name, mode);
 }
 

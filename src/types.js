@@ -8,6 +8,7 @@
  * @property {string} city
  * @property {string} state
  * @property {string} language   // one of config.languages
+ * @property {boolean} [simpleMode]   // large text, voice-first, shorter AI output
  */
 
 /**

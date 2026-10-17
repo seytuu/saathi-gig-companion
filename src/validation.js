@@ -28,9 +28,8 @@ export function validateAgentRequest(body) {
   const media = validateMedia(b.media);
   const context = isObj(b.context) ? /** @type {Record<string, unknown>} */ (b.context) : {};
 
-  if (!input && media.length === 0 && Object.keys(context).length === 0) {
-    throw AppError.badRequest('empty request');
-  }
+  // We don't reject empty input here — some modes (schemes) run from
+  // the profile alone. Each mode validates its own minimum inputs.
 
   return { mode, input, profile, media, context };
 }
@@ -62,6 +61,8 @@ export function validateProfile(raw) {
   const language = check('language', p.language);
   if (!config.languages.includes(language)) throw AppError.badRequest('profile.language');
 
+  const simpleMode = p.simpleMode === true;
+
   return {
     name,
     workType: /** @type {import('./types.js').WorkerProfile['workType']} */ (workTypeRaw),
@@ -69,6 +70,7 @@ export function validateProfile(raw) {
     city,
     state,
     language,
+    simpleMode,
   };
 }
 

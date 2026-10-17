@@ -1,0 +1,81 @@
+/* Saathi — design tokens. One accent, neutral greys, no gradients. */
+
+:root {
+  /* color */
+  --color-bg: #f6f8fa;
+  --color-surface: #ffffff;
+  --color-surface-sunk: #f1f3f5;
+  --color-text: #0f1419;
+  --color-muted: #5a6670;
+  --color-accent: #0b6b6e; /* deep teal */
+  --color-accent-hover: #084f52;
+  --color-accent-ink: #ffffff;
+  --color-danger: #b00020;
+  --color-danger-ink: #ffffff;
+  --color-warn: #b45a00;
+  --color-warn-bg: #fff6e5;
+  --color-success: #0a7a3b;
+  --color-border: #e2e6ea;
+  --color-focus: #ffd60a;
+
+  /* radius */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+
+  /* spacing (4px scale) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* tap targets */
+  --tap-min: 44px;
+
+  /* type */
+  --font-ui:
+    'Noto Sans', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', system-ui, -apple-system,
+    'Segoe UI', Roboto, sans-serif;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 36px;
+  --leading-tight: 1.25;
+  --leading-normal: 1.45;
+
+  /* elevation */
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --shadow-elev: 0 6px 20px rgba(16, 24, 40, 0.1);
+}
+
+/* Simple Mode: larger everything, higher-contrast surfaces. */
+[data-mode='simple'] {
+  --tap-min: 56px;
+  --text-xs: 16px;
+  --text-sm: 18px;
+  --text-base: 22px;
+  --text-lg: 26px;
+  --text-xl: 30px;
+  --text-2xl: 36px;
+  --text-3xl: 44px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --color-text: #000000;
+  --color-muted: #333333;
+  --color-border: #c4ccd4;
+}
+
+/* Respect user motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

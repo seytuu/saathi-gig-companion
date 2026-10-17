@@ -23,11 +23,12 @@ export function buildApp() {
         directives: {
           defaultSrc: ["'self'"],
           scriptSrc: ["'self'"],
-          styleSrc: ["'self'"],
+          // Google Fonts stylesheet lives at fonts.googleapis.com; files at fonts.gstatic.com.
+          styleSrc: ["'self'", 'https://fonts.googleapis.com'],
+          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
           imgSrc: ["'self'", 'data:', 'blob:'],
           mediaSrc: ["'self'", 'blob:'],
           connectSrc: ["'self'"],
-          fontSrc: ["'self'"],
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
           formAction: ["'self'"],

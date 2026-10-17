@@ -14,7 +14,18 @@ const goodProfile = {
 };
 
 test('validateProfile accepts a valid profile', () => {
-  assert.deepEqual(validateProfile(goodProfile), goodProfile);
+  assert.deepEqual(validateProfile(goodProfile), { ...goodProfile, simpleMode: false });
+});
+
+test('validateProfile preserves simpleMode=true', () => {
+  const r = validateProfile({ ...goodProfile, simpleMode: true });
+  assert.equal(r.simpleMode, true);
+});
+
+test('validateProfile ignores truthy non-boolean simpleMode', () => {
+  // Only strict true enables simple mode — avoids accidental activation.
+  const r = validateProfile({ ...goodProfile, simpleMode: 'yes' });
+  assert.equal(r.simpleMode, false);
 });
 
 test('validateProfile rejects unknown language', () => {
@@ -42,11 +53,10 @@ test('validateAgentRequest rejects unknown mode', () => {
   );
 });
 
-test('validateAgentRequest rejects empty request', () => {
-  assert.throws(
-    () => validateAgentRequest({ mode: 'grievance', input: '', profile: goodProfile }),
-    AppError
-  );
+test('validateAgentRequest allows profile-only request (modes enforce their own minimums)', () => {
+  const r = validateAgentRequest({ mode: 'schemes', input: '', profile: goodProfile });
+  assert.equal(r.input, '');
+  assert.deepEqual(r.media, []);
 });
 
 test('validateAgentRequest accepts a valid request', () => {
