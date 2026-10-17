@@ -9,6 +9,7 @@ import { errorBox } from '../ui/error.js';
 import { toast } from '../ui/toast.js';
 import { compressImage, pdfToPart } from '../media.js';
 import { isMicSupported, startDictation } from '../voice.js';
+import { checkEarningsEntry, confidenceFromIssues, BOUNDS } from '../utils/crossCheck.js';
 
 const SAMPLES = {
   text: 'aaj 14 order kiye, 920 aaye, petrol 180 ka dalwaya',
@@ -115,17 +116,14 @@ export function renderEarnings(panel, navigate) {
     panel.setAttribute('aria-busy', 'true');
     render(resultHost, loading(lang));
     try {
-      const result = await agent({
-        mode: 'earnings',
-        input,
-        profile,
-        media: currentParts,
+      const result = await agent({ mode: 'earnings', input, profile, media: currentParts });
+      // Pattern: AI suggests, worker confirms. Don't auto-append — show
+      // review cards with Save/Discard per entry.
+      renderReview(resultHost, result, lang, navigate, {
+        source: currentParts.length ? (currentParts[0].mimeType === 'application/pdf' ? 'pdf' : 'screenshot') : 'text',
+        rawInput: input,
+        model: 'gemini-2.5-flash',
       });
-      // Append to ledger right away.
-      if (Array.isArray(result.entries) && result.entries.length) {
-        store.addLedger(result.entries);
-      }
-      renderResult(resultHost, result, lang, navigate);
     } catch (err) {
       render(resultHost, errorBox(lang, /** @type {Error} */ (err).message));
     } finally {
@@ -139,94 +137,186 @@ export function renderEarnings(panel, navigate) {
 }
 
 /**
+ * Review pattern: AI suggests, worker confirms. Each entry gets Save /
+ * Discard; low-confidence entries highlight fields to double-check.
+ *
  * @param {HTMLElement} host
  * @param {{entries:any[], tip:string}} r
  * @param {string} lang
  * @param {(mode:string, opts?:any) => void} navigate
+ * @param {{source:string, rawInput:string, model:string}} provenance
  */
-function renderResult(host, r, lang, navigate) {
+function renderReview(host, r, lang, navigate, provenance) {
   const kids = [];
-
-  // Tip
   if (r.tip) {
-    kids.push(
-      card({
-        title: '💡 ' + t(lang, 'earnings.tip'),
-        children: [el('p', {}, r.tip)],
-      })
-    );
+    kids.push(card({ title: '💡 ' + t(lang, 'earnings.tip'), children: [el('p', {}, r.tip)] }));
   }
 
   if (!r.entries?.length) {
     kids.push(card({ children: [el('p', { class: 'muted' }, t(lang, 'earnings.empty'))] }));
   } else {
+    kids.push(
+      card({
+        children: [
+          el('p', { class: 'muted' }, t(lang, 'earnings.reviewHelp')),
+        ],
+      })
+    );
     for (const entry of r.entries) {
-      kids.push(entryCard(entry, lang, navigate));
+      kids.push(reviewCard(entry, lang, navigate, provenance));
     }
   }
 
-  // Also update the ledger card below
   kids.push(renderLedger(lang, navigate));
-
   render(host, ...kids);
-  toast(t(lang, 'earnings.saved'));
 }
 
 /**
- * @param {any} e
+ * @param {any} entry
  * @param {string} lang
  * @param {(mode:string, opts?:any) => void} navigate
+ * @param {{source:string, rawInput:string, model:string}} provenance
  */
-function entryCard(e, lang, navigate) {
-  const flag = e.flag
-    ? el('div', { class: 'notice', role: 'status' }, '⚠ ' + e.flag)
-    : null;
+function reviewCard(entry, lang, navigate, provenance) {
+  const check = checkEarningsEntry(entry, provenance.rawInput);
+  const confidence = confidenceFromIssues(check.issues);
+  const low = confidence < BOUNDS.confirmThreshold;
 
+  // Editable fields
+  /** @type {Record<string, HTMLInputElement>} */
+  const fields = {};
+  const fieldDefs = [
+    { k: 'date', label: t(lang, 'earnings.col.date'), type: 'text', inputmode: 'text' },
+    { k: 'platform', label: t(lang, 'earnings.col.platform'), type: 'text', inputmode: 'text' },
+    { k: 'orders', label: t(lang, 'earnings.col.orders'), type: 'number', inputmode: 'numeric' },
+    { k: 'gross', label: t(lang, 'earnings.col.gross'), type: 'number', inputmode: 'decimal' },
+    { k: 'incentives', label: t(lang, 'earnings.col.incentives'), type: 'number', inputmode: 'decimal' },
+    { k: 'deductions', label: t(lang, 'earnings.col.deductions'), type: 'number', inputmode: 'decimal' },
+    { k: 'expenses', label: t(lang, 'earnings.col.expenses'), type: 'number', inputmode: 'decimal' },
+    { k: 'net', label: t(lang, 'earnings.col.net'), type: 'number', inputmode: 'decimal' },
+  ];
+
+  const flagged = flaggedKeys(check.issues);
+  const grid = el(
+    'div',
+    { class: 'kv' },
+    fieldDefs.map((f) => {
+      const inp = /** @type {HTMLInputElement} */ (
+        el('input', {
+          type: f.type,
+          inputmode: f.inputmode,
+          value: String(entry[f.k] ?? ''),
+          'aria-label': f.label,
+        })
+      );
+      fields[f.k] = inp;
+      const row = el('div', { class: 'kv-row' + (flagged.has(f.k) ? ' kv-flag' : '') }, [
+        el('div', { class: 'kv-k' }, f.label),
+        el('div', { class: 'kv-v' }, [inp]),
+      ]);
+      return row;
+    })
+  );
+
+  const notesInput = /** @type {HTMLInputElement} */ (
+    el('input', { type: 'text', value: entry.notes || '', 'aria-label': 'Notes' })
+  );
+
+  const confBar = el('div', { class: 'confbar ' + (low ? 'low' : 'ok') }, [
+    el('span', {}, `${t(lang, 'earnings.confidence')}: ${Math.round(confidence * 100)}%`),
+    ...(check.issues.length
+      ? [el('span', { class: 'muted' }, ' • ' + check.issues.map((i) => flagLabel(i, lang)).join(', '))]
+      : []),
+  ]);
+
+  const saveBtn = el('button', { type: 'button', class: 'primary' }, t(lang, 'earnings.save'));
+  const discardBtn = el('button', { type: 'button', class: 'ghost' }, t(lang, 'earnings.discard'));
   const disputeBtn = el('button', { type: 'button', class: 'secondary' }, t(lang, 'earnings.dispute'));
+
+  const card$ = card({
+    title: `${entry.date} • ${entry.platform}`,
+    children: [
+      low
+        ? el('div', { class: 'notice' }, '⚠ ' + t(lang, 'earnings.pleaseCheck'))
+        : null,
+      confBar,
+      grid,
+      el('label', {}, [el('span', {}, 'Notes'), notesInput]),
+      entry.flag ? el('div', { class: 'notice' }, '⚠ ' + entry.flag) : null,
+    ].filter(Boolean),
+    actions: [saveBtn, discardBtn, disputeBtn],
+  });
+
+  const collect = () => {
+    const next = { ...entry };
+    for (const [k, inp] of Object.entries(fields)) {
+      const raw = inp.value;
+      const def = fieldDefs.find((f) => f.k === k);
+      next[k] = def?.type === 'number' ? Number(raw) || 0 : raw;
+    }
+    next.notes = notesInput.value;
+    return next;
+  };
+
+  saveBtn.addEventListener('click', () => {
+    const final = collect();
+    const edited = JSON.stringify(final) !== JSON.stringify(entry);
+    store.addLedger([{ ...final, status: edited ? 'user_edited' : 'user_confirmed' }], provenance);
+    saveBtn.disabled = true;
+    saveBtn.textContent = '✓ ' + t(lang, 'earnings.saved');
+    toast(t(lang, 'earnings.saved'));
+  });
+  discardBtn.addEventListener('click', () => {
+    card$.remove();
+    toast(t(lang, 'earnings.discarded'));
+  });
   disputeBtn.addEventListener('click', () => {
+    const current = collect();
     navigate('grievance', {
       handoff: {
-        date: e.date,
-        platform: e.platform,
-        orders: e.orders,
+        date: current.date,
+        platform: current.platform,
+        orders: current.orders,
         amount_issue: {
-          gross: e.gross,
-          incentives: e.incentives,
-          deductions: e.deductions,
-          expenses: e.expenses,
-          net: e.net,
+          gross: current.gross,
+          incentives: current.incentives,
+          deductions: current.deductions,
+          expenses: current.expenses,
+          net: current.net,
         },
-        reason: e.flag || e.notes || 'Earnings dispute',
+        reason: entry.flag || current.notes || 'Earnings dispute',
       },
     });
   });
 
-  const grid = el(
-    'div',
-    { class: 'kv' },
-    [
-      kv(t(lang, 'earnings.col.date'), e.date),
-      kv(t(lang, 'earnings.col.platform'), e.platform),
-      kv(t(lang, 'earnings.col.orders'), String(e.orders ?? 0)),
-      kv(t(lang, 'earnings.col.gross'), inr(e.gross)),
-      kv(t(lang, 'earnings.col.incentives'), inr(e.incentives)),
-      kv(t(lang, 'earnings.col.deductions'), inr(e.deductions)),
-      kv(t(lang, 'earnings.col.expenses'), inr(e.expenses)),
-      kv(t(lang, 'earnings.col.net'), inr(e.net), true),
-    ]
-  );
-
-  const kids = [grid];
-  if (flag) kids.unshift(flag);
-  if (e.notes) kids.push(el('p', { class: 'muted' }, e.notes));
-
-  return card({
-    title: `${e.date} • ${e.platform}`,
-    children: kids,
-    actions: [disputeBtn],
-  });
+  return card$;
 }
 
+/** @param {string[]} issues */
+function flaggedKeys(issues) {
+  const s = new Set();
+  for (const i of issues) {
+    if (i.startsWith('orders_')) s.add('orders');
+    if (i.startsWith('gross_')) s.add('gross');
+    if (i === 'net_mismatch') s.add('net');
+    if (i.startsWith('expenses_')) s.add('expenses');
+    if (i === 'future_date') s.add('date');
+  }
+  return s;
+}
+
+/** @param {string} issue @param {string} lang */
+function flagLabel(issue, lang) {
+  const map = {
+    net_mismatch: t(lang, 'earnings.flag.netMismatch'),
+    future_date: t(lang, 'earnings.flag.futureDate'),
+    gross_not_in_text: t(lang, 'earnings.flag.grossNotInText'),
+    orders_out_of_range: t(lang, 'earnings.flag.ordersRange'),
+  };
+  return map[issue] || issue;
+}
+
+/**
 /** @param {string} k @param {string} v @param {boolean} [strong] */
 function kv(k, v, strong) {
   return el('div', { class: 'kv-row' }, [

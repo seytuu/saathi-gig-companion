@@ -74,10 +74,61 @@ export const store = {
     state = { ...state, profile };
     this.log({ kind: 'profile_saved' });
   },
-  /** @param {any[]} entries */
-  addLedger(entries) {
-    state = { ...state, ledger: [...state.ledger, ...entries] };
+  /**
+   * @param {any[]} entries
+   * @param {{source?:string, rawInput?:string, model?:string, transcript?:string}} [provenance]
+   */
+  addLedger(entries, provenance = {}) {
+    const stamped = entries.map((e) => ({
+      ...e,
+      id: cryptoId(),
+      status: e.status || 'user_confirmed',
+      createdAt: Date.now(),
+      provenance,
+    }));
+    state = { ...state, ledger: [...state.ledger, ...stamped] };
     this.log({ kind: 'ledger_added', count: entries.length });
+    return stamped;
+  },
+  /**
+   * @param {string} id
+   * @param {any} patch
+   */
+  updateLedgerEntry(id, patch) {
+    state = {
+      ...state,
+      ledger: state.ledger.map((e) =>
+        e.id === id
+          ? { ...e, ...patch, status: 'user_edited', originalValue: e.originalValue || { ...e } }
+          : e
+      ),
+    };
+    persist();
+  },
+  /** @param {string} id */
+  removeLedgerEntry(id) {
+    state = { ...state, ledger: state.ledger.filter((e) => e.id !== id) };
+    persist();
+  },
+  /** @returns {string} serialised state JSON */
+  exportJson() {
+    return JSON.stringify({ ...state, exportedAt: new Date().toISOString() }, null, 2);
+  },
+  /**
+   * Restore from a validated JSON payload.
+   * @param {string} json
+   * @returns {boolean}
+   */
+  importJson(json) {
+    try {
+      const raw = JSON.parse(json);
+      if (!raw || typeof raw !== 'object') return false;
+      state = migrate(raw);
+      persist();
+      return true;
+    } catch {
+      return false;
+    }
   },
   /** @param {any} scheme */
   saveScheme(scheme) {

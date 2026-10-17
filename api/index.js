@@ -1,5 +1,5 @@
 // @ts-check
-import { buildApp } from '../src/app.js';
+import app from '../src/app.js';
 
-const app = buildApp();
+// Re-export the same singleton app. Vercel wraps this as a serverless function.
 export default app;
