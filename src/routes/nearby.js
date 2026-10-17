@@ -2,6 +2,10 @@
 import { AppError } from '../errors.js';
 import { logger } from '../utils/logger.js';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
+import { LruCache } from '../utils/cache.js';
+
+// 10-minute cache keyed on (category, lat/lng rounded to 3 decimals).
+const nearbyCache = new LruCache({ max: 200, ttlMs: 10 * 60_000 });
 
 const PLACE_TYPES = {
   toilet: 'public_bathroom',
@@ -34,9 +38,19 @@ export async function nearby(req, res) {
   const key = process.env.GOOGLE_MAPS_API_KEY;
   const deepLink = `https://www.google.com/maps/search/${encodeURIComponent(category)}/@${lat},${lng},14z`;
 
+  const cacheKey = `${category}|${lat.toFixed(3)}|${lng.toFixed(3)}|${radius}`;
+  const hit = /** @type {any} */ (nearbyCache.get(cacheKey));
+  if (hit) {
+    res.setHeader('Cache-Control', 'public, max-age=600');
+    return res.json({ ...hit, cached: true });
+  }
+
   if (!key) {
     logger.info('nearby_fallback_nokey', { category });
-    return res.json({ places: [], fallback: deepLink, source: 'fallback' });
+    const payload = { places: [], fallback: deepLink, source: 'fallback' };
+    nearbyCache.set(cacheKey, payload);
+    res.setHeader('Cache-Control', 'public, max-age=600');
+    return res.json(payload);
   }
 
   try {
@@ -58,7 +72,8 @@ export async function nearby(req, res) {
     });
     if (!r.ok) {
       logger.warn('nearby_upstream_error', { status: r.status });
-      return res.json({ places: [], fallback: deepLink, source: 'fallback' });
+      const payload = { places: [], fallback: deepLink, source: 'fallback' };
+      return res.json(payload);
     }
     const data = await r.json();
     const places = (data.places || []).map((p) => ({
@@ -70,7 +85,10 @@ export async function nearby(req, res) {
       openNow: p.currentOpeningHours?.openNow,
       mapsUri: p.googleMapsUri,
     }));
-    res.json({ places, fallback: deepLink, source: 'google' });
+    const payload = { places, fallback: deepLink, source: 'google' };
+    nearbyCache.set(cacheKey, payload);
+    res.setHeader('Cache-Control', 'public, max-age=600');
+    res.json(payload);
   } catch (err) {
     logger.warn('nearby_fetch_failed', { msg: /** @type {Error} */ (err).message });
     res.json({ places: [], fallback: deepLink, source: 'fallback' });
