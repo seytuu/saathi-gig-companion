@@ -1,66 +1,99 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PromptWars App</title>
-  <style>
-    :root { --bg:#f7f7f8; --card:#fff; --text:#1a1a1a; --muted:#666; --accent:#1a73e8; --border:#e3e3e6; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
-    main { max-width: 720px; margin: 0 auto; padding: 32px 16px; }
-    h1 { margin: 0 0 4px; font-size: 1.6rem; }
-    .sub { color: var(--muted); margin: 0 0 24px; }
-    textarea { width:100%; min-height:120px; padding:12px; border:1px solid var(--border); border-radius:10px; font:inherit; resize:vertical; }
-    button { margin-top:12px; background:var(--accent); color:#fff; border:0; border-radius:10px; padding:12px 20px; font:inherit; font-weight:600; cursor:pointer; }
-    button:disabled { opacity:.6; cursor:wait; }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
-    .item { padding:10px 0; border-top:1px solid var(--border); }
-    .item:first-of-type { border-top:0; }
-    .label { font-weight:600; }
-    .error { color:#c5221f; }
-  </style>
-</head>
-<body>
-  <main>
-    <h1 id="app-title">App name</h1>
-    <p class="sub">One line: who this is for and what it does for them.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b7a3b" />
+    <title>Saathi — Gig Worker Companion</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">👷</span>
+        <strong>Saathi</strong>
+        <span class="tagline" data-i18n="tagline">AI working for the worker</span>
+      </div>
+      <button
+        id="profile-chip"
+        class="profile-chip"
+        type="button"
+        aria-label="Edit profile"
+        hidden
+      ></button>
+    </header>
 
-    <textarea id="input" placeholder="Describe your situation..."></textarea>
-    <button id="go">Run</button>
+    <nav class="tabs" role="tablist" aria-label="Saathi features">
+      <button role="tab" class="tab" data-mode="home" aria-selected="true" id="tab-home">
+        <span class="tab-icon" aria-hidden="true">🏠</span>
+        <span class="tab-label" data-i18n="tabs.home">Home</span>
+      </button>
+      <button role="tab" class="tab" data-mode="earnings" aria-selected="false" id="tab-earnings">
+        <span class="tab-icon" aria-hidden="true">💰</span>
+        <span class="tab-label" data-i18n="tabs.earnings">Earnings</span>
+      </button>
+      <button role="tab" class="tab" data-mode="safety" aria-selected="false" id="tab-safety">
+        <span class="tab-icon" aria-hidden="true">🛟</span>
+        <span class="tab-label" data-i18n="tabs.safety">Safety</span>
+      </button>
+      <button role="tab" class="tab" data-mode="schemes" aria-selected="false" id="tab-schemes">
+        <span class="tab-icon" aria-hidden="true">🪪</span>
+        <span class="tab-label" data-i18n="tabs.schemes">Schemes</span>
+      </button>
+      <button role="tab" class="tab" data-mode="document" aria-selected="false" id="tab-document">
+        <span class="tab-icon" aria-hidden="true">📄</span>
+        <span class="tab-label" data-i18n="tabs.document">Docs</span>
+      </button>
+      <button role="tab" class="tab" data-mode="grievance" aria-selected="false" id="tab-grievance">
+        <span class="tab-icon" aria-hidden="true">✉️</span>
+        <span class="tab-label" data-i18n="tabs.grievance">Grievance</span>
+      </button>
+    </nav>
 
-    <div id="out"></div>
-  </main>
+    <main id="panel" role="tabpanel" aria-live="polite" aria-busy="false"></main>
 
-  <script>
-    const btn = document.getElementById("go");
-    const out = document.getElementById("out");
-    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    <dialog id="onboarding" aria-labelledby="onboarding-title">
+      <form method="dialog" id="onboarding-form">
+        <h2 id="onboarding-title">Saathi</h2>
+        <p data-i18n="onboarding.intro">Set up your profile. Takes 30 seconds.</p>
 
-    btn.addEventListener("click", async () => {
-      const input = document.getElementById("input").value;
-      btn.disabled = true; btn.textContent = "Working...";
-      out.innerHTML = "";
-      try {
-        const res = await fetch("/api/agent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ input }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Request failed");
-        out.innerHTML = `
-          <div class="card">
-            <h2>${esc(data.title)}</h2>
-            <p>${esc(data.summary)}</p>
-            ${(data.items || []).map(i => `<div class="item"><div class="label">${esc(i.label)}</div><div>${esc(i.detail)}</div></div>`).join("")}
-          </div>`;
-      } catch (e) {
-        out.innerHTML = `<div class="card error">${esc(e.message)}</div>`;
-      } finally {
-        btn.disabled = false; btn.textContent = "Run";
-      }
-    });
-  </script>
-</body>
+        <label>
+          <span data-i18n="profile.name">Name</span>
+          <input name="name" required maxlength="80" autocomplete="name" />
+        </label>
+
+        <label>
+          <span data-i18n="profile.workType">Work type</span>
+          <select name="workType" required></select>
+        </label>
+
+        <label>
+          <span data-i18n="profile.platform">Platform / employer</span>
+          <select name="platform" required></select>
+        </label>
+
+        <div class="row">
+          <label>
+            <span data-i18n="profile.city">City</span>
+            <input name="city" required maxlength="80" />
+          </label>
+          <label>
+            <span data-i18n="profile.state">State</span>
+            <input name="state" required maxlength="80" />
+          </label>
+        </div>
+
+        <label>
+          <span data-i18n="profile.language">Language</span>
+          <select name="language" required></select>
+        </label>
+
+        <div class="actions">
+          <button type="submit" class="primary" data-i18n="onboarding.save">Save and start</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
 </html>
