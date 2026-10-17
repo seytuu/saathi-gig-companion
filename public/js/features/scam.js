@@ -17,8 +17,9 @@ const SAMPLES = [
 
 /**
  * @param {HTMLElement} panel
+ * @param {{prefill?: string}} [handoff]
  */
-export function renderScam(panel) {
+export function renderScam(panel, handoff) {
   const profile = store.get().profile;
   if (!profile) {
     render(panel, errorBox('English', 'Please complete your profile first.'));
@@ -104,6 +105,7 @@ export function renderScam(panel) {
     }),
     resultHost
   );
+  if (handoff?.prefill) textarea.value = handoff.prefill;
 }
 
 /** @param {HTMLElement} host @param {any} r @param {string} lang */

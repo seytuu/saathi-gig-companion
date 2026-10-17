@@ -556,6 +556,118 @@ dialog::backdrop {
   font-weight: 700;
 }
 
+/* ---------- Bolo (voice agent) ---------- */
+.bolo-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  border: 0;
+  cursor: pointer;
+  box-shadow: var(--shadow-elev);
+}
+.bolo-primary-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+.bolo-primary-label {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+.bolo-fab {
+  position: fixed;
+  left: 16px;
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 30;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  border: 0;
+  font-size: 22px;
+  box-shadow: var(--shadow-elev);
+  cursor: pointer;
+}
+.bolo-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-surface);
+  z-index: 100;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.bolo-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--color-surface-sunk);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  font-size: 20px;
+}
+.bolo-title {
+  margin: 16px 0 4px;
+  font-size: var(--text-2xl);
+}
+.bolo-sub {
+  text-align: center;
+  margin: 0 0 16px;
+}
+.bolo-timer {
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  margin: 8px 0;
+}
+.bolo-mic {
+  width: 128px;
+  height: 128px;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  border: 0;
+  font-size: 56px;
+  cursor: pointer;
+  box-shadow: var(--shadow-elev);
+}
+.bolo-or {
+  color: var(--color-muted);
+  margin: 20px 0 8px;
+}
+.bolo-text {
+  max-width: 480px;
+}
+.bolo-result {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 520px;
+}
+.bolo-transcript,
+.bolo-reply {
+  background: var(--color-surface-sunk);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+.bolo-reply {
+  background: #e8f6f6;
+  border-color: #bfe0e0;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 420px) {
   .app-header .brand .tagline {

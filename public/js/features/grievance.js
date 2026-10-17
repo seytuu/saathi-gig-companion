@@ -38,7 +38,13 @@ export function renderGrievance(panel, opts = {}) {
 
   const prefill = opts.handoff;
   if (prefill && typeof prefill === 'object') {
-    textarea.value = `[Evidence] ${JSON.stringify(prefill, null, 2)}\n\n`;
+    // Bolo path sends a human-readable prefill string; feature handoffs send
+    // structured evidence. Handle both.
+    if (typeof prefill.prefill === 'string' && prefill.prefill) {
+      textarea.value = prefill.prefill;
+    } else {
+      textarea.value = `[Evidence] ${JSON.stringify(prefill, null, 2)}\n\n`;
+    }
   }
 
   const runBtn = el('button', { type: 'button', class: 'primary' }, t(lang, 'grievance.run'));

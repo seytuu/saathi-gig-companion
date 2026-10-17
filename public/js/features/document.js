@@ -105,6 +105,10 @@ export function renderDocument(panel, opts = {}) {
   if (scheme) children.push(renderSchemeChecklist(scheme, lang));
   children.push(inputCard, resultHost);
   render(panel, ...children);
+
+  if (opts.handoff && typeof opts.handoff === 'object' && typeof (/** @type {any} */ (opts.handoff).prefill) === 'string') {
+    questionArea.value = /** @type {any} */ (opts.handoff).prefill;
+  }
 }
 
 /** @param {{ name:string, documents_needed:string[] }} scheme @param {string} lang */

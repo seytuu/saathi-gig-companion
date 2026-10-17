@@ -15,6 +15,7 @@ import { renderSafety } from './features/safety.js';
 import { renderScam } from './features/scam.js';
 import { renderNearby } from './features/nearby.js';
 import { mountSos } from './features/sos.js';
+import { mountBoloFab, openBolo } from './features/bolo.js';
 import { errorBox } from './ui/error.js';
 import { render } from './ui/dom.js';
 
@@ -70,15 +71,18 @@ async function bootInner() {
 
   store.subscribe(() => renderProfileChip());
 
-  // Persistent SOS button, mounted once.
+  // Persistent SOS button + Bolo FAB, mounted once.
   mountSos(() => store.get().profile?.language || 'English');
+  mountBoloFab(navigate);
 
-  // ?action= query param routing (SOS, grievance, scam) for app shortcuts.
+  // ?action= query param routing (SOS, grievance, scam, record) for app shortcuts.
   const params = new URLSearchParams(location.search);
   const action = params.get('action');
   if (action === 'sos') {
     document.getElementById('sos-btn')?.click();
-  } else if (['grievance', 'scam', 'earnings', 'safety', 'nearby'].includes(action || '')) {
+  } else if (action === 'record') {
+    openBolo(navigate);
+  } else if (['grievance', 'scam', 'earnings', 'safety', 'nearby', 'schemes', 'document'].includes(action || '')) {
     navigate(action);
     return;
   }
@@ -126,15 +130,15 @@ function rerender() {
     case 'grievance':
       return renderGrievance(panel, { handoff: current.opts?.handoff });
     case 'schemes':
-      return renderSchemes(panel, navigate);
+      return renderSchemes(panel, navigate, current.opts?.handoff);
     case 'document':
       return renderDocument(panel, { handoff: current.opts?.handoff });
     case 'earnings':
-      return renderEarnings(panel, navigate);
+      return renderEarnings(panel, navigate, current.opts?.handoff);
     case 'safety':
-      return renderSafety(panel, navigate, publicConfig?.helplines || []);
+      return renderSafety(panel, navigate, publicConfig?.helplines || [], current.opts?.handoff);
     case 'scam':
-      return renderScam(panel);
+      return renderScam(panel, current.opts?.handoff);
     case 'nearby':
       return renderNearby(panel);
     default:

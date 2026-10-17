@@ -20,8 +20,9 @@ const SAMPLES = {
 /**
  * @param {HTMLElement} panel
  * @param {(mode:string, opts?:any) => void} navigate
+ * @param {{prefill?: string}} [handoff]
  */
-export function renderEarnings(panel, navigate) {
+export function renderEarnings(panel, navigate, handoff) {
   const profile = store.get().profile;
   if (!profile) {
     render(panel, errorBox('English', 'Please complete your profile first.'));
@@ -134,6 +135,13 @@ export function renderEarnings(panel, navigate) {
 
   const ledgerCard = renderLedger(lang, navigate);
   render(panel, inputCard, resultHost, ledgerCard);
+
+  // Bolo handoff: pre-fill text and auto-run extraction so the user
+  // sees the review card immediately.
+  if (handoff?.prefill) {
+    textarea.value = handoff.prefill;
+    setTimeout(() => runBtn.click(), 0);
+  }
 }
 
 /**

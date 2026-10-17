@@ -24,8 +24,9 @@ const CATEGORIES = [
  * @param {HTMLElement} panel
  * @param {(mode:string, opts?:any) => void} navigate
  * @param {any[]} helplines
+ * @param {{prefill?: string}} [handoff]
  */
-export function renderSafety(panel, navigate, helplines) {
+export function renderSafety(panel, navigate, helplines, handoff) {
   const profile = store.get().profile;
   if (!profile) {
     render(panel, errorBox('English', 'Please complete your profile first.'));
@@ -94,6 +95,7 @@ export function renderSafety(panel, navigate, helplines) {
   const helplineCard = helplinesCard(helplines, lang);
 
   render(panel, inputCard, resultHost, helplineCard);
+  if (handoff?.prefill) textarea.value = handoff.prefill;
 }
 
 /**

@@ -19,8 +19,9 @@ const SAMPLES = [
 /**
  * @param {HTMLElement} panel
  * @param {(mode:string, opts?:any) => void} navigate
+ * @param {{prefill?: string}} [handoff]
  */
-export function renderSchemes(panel, navigate) {
+export function renderSchemes(panel, navigate, handoff) {
   const profile = store.get().profile;
   if (!profile) {
     render(panel, errorBox('English', 'Please complete your profile first.'));
@@ -73,6 +74,7 @@ export function renderSchemes(panel, navigate) {
   });
 
   render(panel, inputCard, resultHost);
+  if (handoff?.prefill) textarea.value = handoff.prefill;
 }
 
 /**

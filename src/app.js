@@ -13,6 +13,7 @@ import { getMode, listModes } from './modes/index.js';
 import { createGeminiProvider } from './ai/gemini.js';
 import { nearby } from './routes/nearby.js';
 import { conditions } from './routes/conditions.js';
+import { capture } from './routes/capture.js';
 
 /**
  * Build the Express app. Pure factory — nothing above the function body
@@ -87,6 +88,17 @@ export function buildApp() {
   app.get('/api/conditions', async (req, res, next) => {
     try {
       await conditions(req, res);
+    } catch (e) {
+      next(e);
+    }
+  });
+
+  app.post('/api/capture', async (req, res, next) => {
+    try {
+      if (!config.gemini.apiKey) {
+        return res.status(503).json({ error: 'Saathi is being set up. Please try again shortly.', code: 'misconfigured' });
+      }
+      await capture(req, res);
     } catch (e) {
       next(e);
     }

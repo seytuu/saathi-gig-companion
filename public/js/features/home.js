@@ -6,6 +6,7 @@ import { card } from '../ui/card.js';
 import { emptyState } from '../ui/emptyState.js';
 import { renderConditionsCard } from './conditions.js';
 import { helplinesCard } from './safety.js';
+import { openBolo } from './bolo.js';
 
 /**
  * @param {HTMLElement} panel
@@ -83,7 +84,16 @@ export function renderHome(panel, onNavigate, publicConfig) {
         ),
   });
 
-  const nodes = [greeting];
+  // Primary CTA: big Bolo button so voice is the first thing users see.
+  const boloBtn = el(
+    'button',
+    { type: 'button', class: 'bolo-primary', 'aria-label': t(lang, 'bolo.primaryAria') },
+    [el('span', { class: 'bolo-primary-icon', 'aria-hidden': 'true' }, '🎤'), el('span', { class: 'bolo-primary-label' }, t(lang, 'bolo.primary'))]
+  );
+  boloBtn.addEventListener('click', () => openBolo(onNavigate));
+  const boloCard = card({ children: [boloBtn, el('p', { class: 'muted', style: 'text-align:center;margin:8px 0 0' }, t(lang, 'bolo.primaryHint'))] });
+
+  const nodes = [greeting, boloCard];
   if (profile) nodes.push(renderConditionsCard(profile));
   nodes.push(earnCard, grievCard, quick);
   if (publicConfig?.helplines?.length) {
