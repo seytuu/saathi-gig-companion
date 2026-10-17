@@ -90,7 +90,23 @@ export const didResetOnLoad = loaded.reset;
 /** @type {Set<(s: State) => void>} */
 const subs = new Set();
 
-function persist() {
+const CAPS = Object.freeze({ ledger: 1000, grievances: 200, documents: 100, timeline: 200 });
+const PERSIST_DEBOUNCE_MS = 300;
+
+function enforceCaps(s) {
+  // Cap newest-first by convention (ledger/grievances/documents are
+  // appended; timeline is prepended). Slice preserves recency.
+  return {
+    ...s,
+    ledger: s.ledger.length > CAPS.ledger ? s.ledger.slice(-CAPS.ledger) : s.ledger,
+    grievances: s.grievances.length > CAPS.grievances ? s.grievances.slice(-CAPS.grievances) : s.grievances,
+    documents: s.documents.length > CAPS.documents ? s.documents.slice(-CAPS.documents) : s.documents,
+    timeline: s.timeline.length > CAPS.timeline ? s.timeline.slice(0, CAPS.timeline) : s.timeline,
+  };
+}
+
+let pendingPersist = 0;
+function doPersist() {
   if (typeof localStorage !== 'undefined') {
     try {
       localStorage.setItem(KEY, JSON.stringify(state));
@@ -98,7 +114,33 @@ function persist() {
       console.warn('store persist failed', e);
     }
   }
+  pendingPersist = 0;
+}
+
+function persist() {
+  state = enforceCaps(state);
   subs.forEach((fn) => fn(state));
+  if (typeof localStorage === 'undefined') return;
+  if (pendingPersist) return;
+  pendingPersist = /** @type {any} */ (setTimeout(doPersist, PERSIST_DEBOUNCE_MS));
+}
+
+/** Flush any debounced write immediately — on visibilitychange / pagehide. */
+export function flushStore() {
+  if (pendingPersist) {
+    clearTimeout(pendingPersist);
+    pendingPersist = 0;
+    doPersist();
+  }
+}
+
+if (typeof document !== 'undefined') {
+  const flushOnLeave = () => flushStore();
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushOnLeave();
+  });
+  window.addEventListener('pagehide', flushOnLeave);
+  window.addEventListener('beforeunload', flushOnLeave);
 }
 
 export const store = {
@@ -162,9 +204,18 @@ export const store = {
     state = { ...state, schemes: [...state.schemes, { ...scheme, savedAt: Date.now() }] };
     this.log({ kind: 'scheme_saved', name: scheme.name });
   },
-  /** @param {any} doc */
+  /**
+   * Save a document's extracted result. Never store the raw file (base64
+   * image/PDF) — only the AI result + a short metadata record.
+   * @param {any} doc
+   */
   addDocument(doc) {
-    state = { ...state, documents: [...state.documents, { ...doc, addedAt: Date.now() }] };
+    const clean = { ...doc };
+    // Belt-and-braces: strip any inline binary a caller might include.
+    delete clean.data;
+    delete clean.base64;
+    delete clean.mediaBase64;
+    state = { ...state, documents: [...state.documents, { ...clean, addedAt: Date.now() }] };
     this.log({ kind: 'document_added' });
   },
   /** @param {any} g */
