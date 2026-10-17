@@ -122,7 +122,7 @@ export function renderEarnings(panel, navigate) {
       renderReview(resultHost, result, lang, navigate, {
         source: currentParts.length ? (currentParts[0].mimeType === 'application/pdf' ? 'pdf' : 'screenshot') : 'text',
         rawInput: input,
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3.8-flash',
       });
     } catch (err) {
       render(resultHost, errorBox(lang, /** @type {Error} */ (err).message));
