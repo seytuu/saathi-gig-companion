@@ -7,6 +7,7 @@ import { toast } from '../ui/toast.js';
 import { card } from '../ui/card.js';
 import { bulletList } from '../ui/list.js';
 import { letterBlock } from '../ui/letter.js';
+import { blobToBase64 } from '../media.js';
 
 const SUPPORTED_MIMES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
 
@@ -405,18 +406,6 @@ function pickMime() {
   if (!window.MediaRecorder || !MediaRecorder.isTypeSupported) return '';
   for (const m of SUPPORTED_MIMES) if (MediaRecorder.isTypeSupported(m)) return m;
   return '';
-}
-
-/** @param {Blob} blob */
-async function blobToBase64(blob) {
-  const buf = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let bin = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    bin += String.fromCharCode.apply(null, /** @type {any} */ (bytes.subarray(i, i + chunk)));
-  }
-  return btoa(bin);
 }
 
 /**

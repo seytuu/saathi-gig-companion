@@ -51,13 +51,26 @@ async function createBitmap(file) {
   }
 }
 
-/** @param {Blob} blob */
-export async function blobToBase64(blob) {
-  const buf = await blob.arrayBuffer();
-  const bytes = new Uint8Array(buf);
-  let bin = '';
-  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
+/**
+ * Encode a Blob to raw base64 (no data: prefix).
+ * Uses FileReader.readAsDataURL — natively fast and streaming — and strips
+ * the data: prefix. Avoids String.fromCharCode call-stack blow-ups on
+ * large audio blobs.
+ *
+ * @param {Blob} blob
+ * @returns {Promise<string>}
+ */
+export function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error('read failed'));
+    reader.onload = () => {
+      const url = /** @type {string} */ (reader.result);
+      const comma = url.indexOf(',');
+      resolve(comma >= 0 ? url.slice(comma + 1) : url);
+    };
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** Pass through a PDF File as base64 (no transform). */
