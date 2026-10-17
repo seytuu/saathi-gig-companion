@@ -1,5 +1,6 @@
 // @ts-check
 import { getPublicConfig } from './api.js';
+import { inlineConfig } from './config.js';
 import { store, didResetOnLoad } from './store.js';
 import { applyI18n } from './i18n.js';
 import { toast } from './ui/toast.js';
@@ -16,7 +17,6 @@ import { renderScam } from './features/scam.js';
 import { renderNearby } from './features/nearby.js';
 import { mountSos } from './features/sos.js';
 import { mountBoloFab, openBolo } from './features/bolo.js';
-import { errorBox } from './ui/error.js';
 import { render } from './ui/dom.js';
 
 const panel = /** @type {HTMLElement} */ (document.getElementById('panel'));
@@ -37,12 +37,15 @@ let tabs;
 })();
 
 async function bootInner() {
-  try {
-    publicConfig = await getPublicConfig();
-  } catch (e) {
-    render(panel, errorBox('English', 'Could not load Saathi. ' + /** @type {Error} */ (e).message));
-    return;
-  }
+  // Paint from the inline config instantly; refresh in the background.
+  publicConfig = inlineConfig;
+  getPublicConfig()
+    .then((fresh) => {
+      publicConfig = fresh;
+    })
+    .catch(() => {
+      /* keep inline — never block UI on this */
+    });
 
   if (didResetOnLoad) {
     toast('App updated — your old data was reset. Backup kept.', 4000);
