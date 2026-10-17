@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
 import { config } from './config.js';
+import { cspDirectives } from './security.js';
 import { AppError, errorMiddleware } from './errors.js';
 import { logger } from './utils/logger.js';
 import { validateAgentRequest } from './validation.js';
@@ -20,27 +21,14 @@ export function buildApp() {
     helmet({
       contentSecurityPolicy: {
         useDefaults: false,
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
-          // Google Fonts stylesheet lives at fonts.googleapis.com; files at fonts.gstatic.com.
-          styleSrc: ["'self'", 'https://fonts.googleapis.com'],
-          fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-          imgSrc: ["'self'", 'data:', 'blob:'],
-          mediaSrc: ["'self'", 'blob:'],
-          connectSrc: ["'self'"],
-          objectSrc: ["'none'"],
-          baseUri: ["'self'"],
-          formAction: ["'self'"],
-          frameAncestors: ["'none'"],
-        },
+        directives: cspDirectives,
       },
       crossOriginEmbedderPolicy: false,
     })
   );
 
   app.use((req, res, next) => {
-    res.setHeader('Permissions-Policy', 'microphone=(self), camera=(), geolocation=()');
+    res.setHeader('Permissions-Policy', config.permissionsPolicy);
     next();
   });
 

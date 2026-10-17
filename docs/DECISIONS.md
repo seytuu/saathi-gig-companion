@@ -25,8 +25,12 @@ Every feature lives in `src/modes/<name>/{prompt, schema, handler, index}.js`. `
 - `vercel.json` rewrites `/api/(.*)` to the single function (one cold start to warm), `maxDuration: 60s`.
 - Caveat: request body limit ~4.5MB. We compress images, sample video frames, cap PDFs at ~3MB — all enforced in `src/config.js`.
 
-## 7. Strict CSP with no inline scripts/styles
-Helmet is configured with `useDefaults: false` and no `'unsafe-inline'`. All JS is loaded as modules from `/js/*`; all CSS from `/css/style.css`. Model output is rendered with `textContent` / DOM builders in `public/js/ui/dom.js` — never `innerHTML`. This prevents prompt-injection XSS even if a user pastes `<script>` into the input.
+## 7. Strict CSP with no inline scripts/styles, mirrored into vercel.json
+Helmet is configured with `useDefaults: false` and no `'unsafe-inline'`. All JS is loaded as modules from `/js/*`; all CSS from `/css/style.css` (plus Google Fonts for Noto Sans variants, allow-listed in `style-src` and `font-src`). Model output is rendered with `textContent` / DOM builders in `public/js/ui/dom.js` — never `innerHTML`. This prevents prompt-injection XSS even if a user pastes `<script>` into the input.
+
+**Vercel-specific gotcha:** `public/` is served by Vercel's static edge, not Express — so helmet's CSP never reaches `index.html` in production. The CSP is defined once in `src/security.js` and mirrored into `vercel.json`'s `/(.*)` header rule; a test (`test/security.test.js`) fails if the two drift. The Permissions-Policy (`microphone=(self), camera=(self), geolocation=(self)`) is centralised the same way.
+
+**connect-src stays `'self'`.** Any feature that needs weather / AQI / geocoding / another external API must proxy it through a server route (e.g. `/api/conditions`) so keys and traffic stay server-side. Google Maps deep links are browser navigations and are not subject to connect-src.
 
 ## 8. Hard-coded helplines
 Helplines (112, 108, 1091, 181, 1033, 100) are in `src/config.js` and surfaced by the Safety mode directly from the client. The model is **never asked to produce helpline numbers** — hallucinated numbers would be dangerous.

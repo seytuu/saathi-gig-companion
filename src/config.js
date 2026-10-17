@@ -64,6 +64,9 @@ export const config = Object.freeze({
 
   mediaMimeAllowed: ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'],
 
+  // Permissions-Policy header. Allow the APIs we actually use.
+  permissionsPolicy: 'microphone=(self), camera=(self), geolocation=(self)',
+
   // Hard-coded, never AI-generated.
   helplines: [
     { label: 'Emergency (All India)', number: '112' },
