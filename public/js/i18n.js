@@ -18,8 +18,10 @@ const dict = {
     'tabs.document': 'Docs',
     'tabs.grievance': 'Grievance',
 
-    'onboarding.intro': 'Set up your profile. Takes 30 seconds.',
+    'onboarding.intro': 'Pick your language. Rest is optional.',
+    'onboarding.optional': 'The rest is optional. You can fill it later from the profile chip.',
     'onboarding.save': 'Save and start',
+    'onboarding.skip': 'Skip for now',
     'profile.name': 'Name',
     'profile.workType': 'Work type',
     'profile.platform': 'Platform or employer',
@@ -181,8 +183,10 @@ const dict = {
     'tabs.document': 'कागज़',
     'tabs.grievance': 'शिकायत',
 
-    'onboarding.intro': 'अपनी जानकारी भरें। 30 सेकंड लगेंगे।',
+    'onboarding.intro': 'अपनी भाषा चुनें। बाकी वैकल्पिक।',
+    'onboarding.optional': 'बाकी वैकल्पिक है। बाद में भर सकते हैं।',
     'onboarding.save': 'शुरू करें',
+    'onboarding.skip': 'अभी छोड़ें',
     'profile.name': 'नाम',
     'profile.workType': 'काम का प्रकार',
     'profile.platform': 'ऐप / नियोक्ता',

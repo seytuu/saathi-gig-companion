@@ -32,25 +32,35 @@ export function openProfileDialog(config) {
   applyI18n(dialog, current?.language || 'English');
 
   return new Promise((resolve) => {
-    const onSubmit = (e) => {
-      e.preventDefault();
-      const data = new FormData(form);
-      const profile = {
-        name: String(data.get('name') || '').trim(),
-        workType: /** @type {any} */ (String(data.get('workType') || '')),
-        platform: String(data.get('platform') || '').trim(),
-        city: String(data.get('city') || '').trim(),
-        state: String(data.get('state') || '').trim(),
-        language: String(data.get('language') || 'English'),
-        simpleMode: data.get('simpleMode') === 'on' || form.simpleMode.checked,
-      };
-      if (!profile.name || !profile.city || !profile.state) return;
+    const skipBtn = /** @type {HTMLButtonElement|null} */ (
+      document.getElementById('onboarding-skip')
+    );
+    const finish = (profile) => {
       store.setProfile(profile);
       form.removeEventListener('submit', onSubmit);
+      skipBtn?.removeEventListener('click', onSkip);
       dialog.close();
       resolve(profile);
     };
+    const build = () => {
+      const data = new FormData(form);
+      return {
+        name: String(data.get('name') || '').trim() || 'Saathi',
+        workType: /** @type {any} */ (String(data.get('workType') || 'delivery') || 'delivery'),
+        platform: String(data.get('platform') || 'Other').trim() || 'Other',
+        city: String(data.get('city') || '-').trim() || '-',
+        state: String(data.get('state') || '-').trim() || '-',
+        language: String(data.get('language') || 'English') || 'English',
+        simpleMode: data.get('simpleMode') === 'on' || form.simpleMode.checked,
+      };
+    };
+    const onSubmit = (e) => {
+      e.preventDefault();
+      finish(build());
+    };
+    const onSkip = () => finish(build());
     form.addEventListener('submit', onSubmit);
+    skipBtn?.addEventListener('click', onSkip);
     dialog.showModal();
   });
 }

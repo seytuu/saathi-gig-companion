@@ -72,35 +72,37 @@
         <p data-i18n="onboarding.intro">Set up your profile. Takes 30 seconds.</p>
 
         <label>
+          <span data-i18n="profile.language">Language</span>
+          <select name="language" required></select>
+        </label>
+
+        <p class="muted" data-i18n="onboarding.optional">The rest is optional. You can fill it later from the profile chip.</p>
+
+        <label>
           <span data-i18n="profile.name">Name</span>
-          <input name="name" required maxlength="80" autocomplete="name" />
+          <input name="name" maxlength="80" autocomplete="name" />
         </label>
 
         <label>
           <span data-i18n="profile.workType">Work type</span>
-          <select name="workType" required></select>
+          <select name="workType"></select>
         </label>
 
         <label>
           <span data-i18n="profile.platform">Platform / employer</span>
-          <select name="platform" required></select>
+          <select name="platform"></select>
         </label>
 
         <div class="row">
           <label>
             <span data-i18n="profile.city">City</span>
-            <input name="city" required maxlength="80" />
+            <input name="city" maxlength="80" />
           </label>
           <label>
             <span data-i18n="profile.state">State</span>
-            <input name="state" required maxlength="80" />
+            <input name="state" maxlength="80" />
           </label>
         </div>
-
-        <label>
-          <span data-i18n="profile.language">Language</span>
-          <select name="language" required></select>
-        </label>
 
         <label class="switch">
           <input type="checkbox" name="simpleMode" />
@@ -110,6 +112,7 @@
 
         <div class="actions">
           <button type="submit" class="primary" data-i18n="onboarding.save">Save and start</button>
+          <button type="button" id="onboarding-skip" class="ghost" data-i18n="onboarding.skip">Skip</button>
         </div>
       </form>
     </dialog>
