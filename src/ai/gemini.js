@@ -3,6 +3,7 @@ import { config } from '../config.js';
 import { AppError } from '../errors.js';
 import { logger } from '../utils/logger.js';
 import { parseModelJson } from '../utils/parseModelJson.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 /**
  * Build a Gemini provider. Features never call fetch directly.
@@ -91,17 +92,15 @@ async function callWithRetry(body) {
  */
 async function callOnce(body) {
   const url = `${config.gemini.endpoint}/${config.gemini.model}:generateContent`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), config.gemini.timeoutMs);
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-goog-api-key': config.gemini.apiKey,
       },
       body: JSON.stringify(body),
-      signal: controller.signal,
+      timeoutMs: config.gemini.timeoutMs,
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
@@ -116,7 +115,7 @@ async function callOnce(body) {
     if (/** @type {{name?: string}} */ (err)?.name === 'AbortError') throw AppError.timeout();
     throw AppError.upstream(/** @type {Error} */ (err).message || 'unknown');
   } finally {
-    clearTimeout(timer);
+    /* fetchWithTimeout owns the timer */
   }
 }
 

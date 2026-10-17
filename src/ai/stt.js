@@ -1,5 +1,6 @@
 // @ts-check
 import { logger } from '../utils/logger.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 const SARVAM_URL = 'https://api.sarvam.ai/speech-to-text';
 const SARVAM_MODEL = 'saarika:v2.5';
@@ -35,10 +36,11 @@ export async function sarvamSTT({ audio, mimeType, language }) {
     form.append('model', SARVAM_MODEL);
     if (languageCode && languageCode !== 'unknown') form.append('language_code', languageCode);
 
-    const r = await fetch(SARVAM_URL, {
+    const r = await fetchWithTimeout(SARVAM_URL, {
       method: 'POST',
       headers: { 'api-subscription-key': key },
       body: form,
+      timeoutMs: 20_000,
     });
     if (!r.ok) {
       logger.warn('sarvam_status', { status: r.status });

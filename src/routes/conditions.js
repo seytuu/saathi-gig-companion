@@ -1,6 +1,7 @@
 // @ts-check
 import { AppError } from '../errors.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 /**
  * Server-side proxy for weather + air quality + geocoding.
@@ -51,7 +52,7 @@ export async function conditions(req, res) {
 async function geocode(city, key) {
   if (!key) return null;
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(city + ', India')}&key=${key}`;
-  const r = await fetch(url);
+  const r = await fetchWithTimeout(url, { timeoutMs: 6_000 });
   if (!r.ok) return null;
   const data = await r.json();
   const loc = data.results?.[0]?.geometry?.location;
@@ -67,8 +68,9 @@ async function geocode(city, key) {
 async function googleWeather(lat, lng, key) {
   if (!key) return null;
   try {
-    const r = await fetch(
-      `https://weather.googleapis.com/v1/currentConditions:lookup?key=${key}&location.latitude=${lat}&location.longitude=${lng}`
+    const r = await fetchWithTimeout(
+      `https://weather.googleapis.com/v1/currentConditions:lookup?key=${key}&location.latitude=${lat}&location.longitude=${lng}`,
+      { timeoutMs: 8_000 }
     );
     if (!r.ok) {
       logger.warn('weather_google_status', { status: r.status });
@@ -96,12 +98,13 @@ async function googleWeather(lat, lng, key) {
 async function googleAir(lat, lng, key) {
   if (!key) return null;
   try {
-    const r = await fetch(
+    const r = await fetchWithTimeout(
       `https://airquality.googleapis.com/v1/currentConditions:lookup?key=${key}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ location: { latitude: lat, longitude: lng } }),
+        timeoutMs: 8_000,
       }
     );
     if (!r.ok) {

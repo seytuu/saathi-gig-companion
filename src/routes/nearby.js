@@ -1,6 +1,7 @@
 // @ts-check
 import { AppError } from '../errors.js';
 import { logger } from '../utils/logger.js';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout.js';
 
 const PLACE_TYPES = {
   toilet: 'public_bathroom',
@@ -39,7 +40,7 @@ export async function nearby(req, res) {
   }
 
   try {
-    const r = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
+    const r = await fetchWithTimeout('https://places.googleapis.com/v1/places:searchNearby', { timeoutMs: 8_000,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
